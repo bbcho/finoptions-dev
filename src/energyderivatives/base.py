@@ -139,10 +139,11 @@ class GBSOption(Option):
 
     Example
     -------
-    >>> import energyderivatices as ed
+    >>> import energyderivatives as ed
     >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
-    >>> opt.put()
     >>> opt.call()
+    >>> opt.put()
+    >>> opt.greeks(call=True)
 
     References
     ----------
@@ -175,7 +176,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.put()
 
@@ -204,7 +205,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.put()
 
@@ -237,7 +238,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.delta(call=True)
 
@@ -265,7 +266,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.theta(call=True)
 
@@ -313,7 +314,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.vega(call=True)
 
@@ -344,7 +345,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.rho(call=True)
 
@@ -392,7 +393,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.lambda(call=True)
 
@@ -434,7 +435,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.gamma(call=True)
 
@@ -464,7 +465,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.c_of_c(call=True)
 
@@ -503,7 +504,7 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatices as ed
+        >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.greeks(call=True)
 
