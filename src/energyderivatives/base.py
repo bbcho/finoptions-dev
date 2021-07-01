@@ -222,6 +222,307 @@ class GBSOption(Option):
 
         return result
 
+    def delta(self, call: bool):
+        """
+        Method to return delta greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns delta greek for call option if True, else returns delta greek for put options. By default True.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.delta(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        if call == True:
+            return _np.exp((self._b - self._r) * self._t) * self._CND(self._d1)
+        else:
+            return _np.exp((self._b - self._r) * self._t) * (self._CND(self._d1) - 1)
+
+    def theta(self, call: bool):
+        """
+        Method to return theta greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns theta greek for call option if True, else returns theta greek for put options. By default True.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.theta(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        Theta1 = -(
+            self._S
+            * _np.exp((self._b - self._r) * self._t)
+            * self._NDF(self._d1)
+            * self._sigma
+        ) / (2 * _np.sqrt(self._t))
+
+        if call == True:
+            return (
+                Theta1
+                - (self._b - self._r)
+                * self._S
+                * _np.exp((self._b - self._r) * self._t)
+                * self._CND(+self._d1)
+                - self._r * self._K * _np.exp(-self._r * self._t) * self._CND(+self._d2)
+            )
+        else:
+            return (
+                Theta1
+                + (self._b - self._r)
+                * self._S
+                * _np.exp((self._b - self._r) * self._t)
+                * self._CND(-self._d1)
+                + self._r * self._K * _np.exp(-self._r * self._t) * self._CND(-self._d2)
+            )
+
+    def vega(self):
+        """
+        Method to return vega greek for either call or put options.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.vega(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        # for both call and put options
+        return (
+            self._S
+            * _np.exp((self._b - self._r) * self._t)
+            * self._NDF(self._d1)
+            * _np.sqrt(self._t)
+        )
+
+    def rho(self, call: bool):
+        """
+        Method to return rho greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns rho greek for call option if True, else returns rho greek for put options. By default True.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.rho(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        if call == True:
+            price = self.call()
+            if self._b != 0:
+                result = (
+                    self._t
+                    * self._K
+                    * _np.exp(-self._r * self._t)
+                    * self._CND(self._d2)
+                )
+            else:
+                result = -self._t * price
+        else:
+            price = self.put()
+            if self._b != 0:
+                result = (
+                    -self._t
+                    * self._K
+                    * _np.exp(-self._r * self._t)
+                    * self._CND(-self._d2)
+                )
+            else:
+                result = -self._t * price
+
+        return result
+
+    def lamb(self, call: bool):
+        """
+        Method to return lambda greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.lambda(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        if call == True:
+            price = self.call()
+            result = (
+                _np.exp((self._b - self._r) * self._t)
+                * self._CND(self._d1)
+                * self._S
+                / price
+            )
+
+        else:
+            price = self.put()
+            result = (
+                _np.exp((self._b - self._r) * self._t)
+                * (self._CND(self._d1) - 1)
+                * self._S
+                / price
+            )
+
+        return result
+
+    def gamma(self):
+        """
+        Method to return gamma greek for either call or put options.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.gamma(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        # for both call and put options
+        return (
+            _np.exp((self._b - self._r) * self._t)
+            * self._NDF(self._d1)
+            / (self._S * self._sigma * _np.sqrt(self._t))
+        )
+
+    def c_of_c(self, call: bool):
+        """
+        Method to return C of C greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns C of C greek for call option if True, else returns C of C greek for put options. By default True.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.c_of_c(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        if call == True:
+            return (
+                self._t
+                * self._S
+                * _np.exp((self._b - self._r) * self._t)
+                * self._CND(self._d1)
+            )
+        else:
+            return (
+                -self._t
+                * self._S
+                * _np.exp((self._b - self._r) * self._t)
+                * self._CND(-self._d1)
+            )
+
+    def greeks(self, call: bool):
+        """
+        Method to return greeks delta, theta, vegam rho, lambda, gamma and C of C for either
+        call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns greeks for call option if True, else returns greeks for put options. By default True.
+
+        Returns
+        -------
+        dictionary of greeks
+
+        Example
+        -------
+        >>> import energyderivatices as ed
+        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.greeks(call=True)
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+            "CofC": self.c_of_c(call),
+        }
+
+        return gk
+
 
 if __name__ == "__main__":
 
@@ -229,4 +530,8 @@ if __name__ == "__main__":
     # print("{:.6f}".format(opt.call()))
     print(opt.call())
     print(opt.put())
+    print(opt.delta(call=True))
+    print(opt.delta(call=False))
+
+    print(opt.greeks(call=True))
 
