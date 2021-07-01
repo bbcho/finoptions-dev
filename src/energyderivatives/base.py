@@ -1,17 +1,21 @@
 from abc import ABC, abstractmethod
 
 
-class Base(ABC):
+class _Base(ABC):
     def __init__(self):
         pass
+
+
+class Derivative(_Base):
+    pass
 
     @abstractmethod
     def simulate(self):
         pass
 
-
-class Derivative(Base):
-    pass
+    @abstractmethod
+    def get_params(self):
+        pass
 
 
 class Option(Derivative):
@@ -22,53 +26,38 @@ class Option(Derivative):
         If put is True, initialize a put option object. If put is False, initialize a call option object.
     """
 
-    def __init__(
-        self,
-        S: float,
-        K: float,
-        r: float,
-        t: float,
-        b: float,
-        sigma: float,
-        put: bool = True,
-    ):
-        self.S = S
-        self.K = K
-        self.r = r
-        self.t = t
-        self.b = b
-        self.sigma = sigma
-        self.put = put
+    def __init__(self, S: float, K: float, r: float, t: float, b: float, sigma: float):
+        self._S = S
+        self._K = K
+        self._r = r
+        self._t = t
+        self._b = b
+        self._sigma = sigma
 
     def simulate(self):
         print("sim run")
 
+    def get_params(self):
+        return {
+            "level": self._S,
+            "strike": self._K,
+            "risk-free-rate": self._r,
+            "time-to-maturity": self._t,
+            "b": self._b,
+            "annualized-volatility": self._sigma,
+        }
 
-class Put(Option):
-    def __init__(self, S: float, K: float, r: float, t: float, b: float, sigma: float):
-        self.S = S
-        self.K = K
-        self.r = r
-        self.t = t
-        self.b = b
-        self.sigma = sigma
-        self.put = True
+    def put():
+        pass
 
-
-class Call(Option):
-    def __init__(self, S: float, K: float, r: float, t: float, b: float, sigma: float):
-        self.S = S
-        self.K = K
-        self.r = r
-        self.t = t
-        self.b = b
-        self.sigma = sigma
-        self.put = True
+    def call():
+        pass
 
 
 if __name__ == "__main__":
 
-    put = Put(0, 0, 0, 0, 0, 0)
-    call = Call(0, 0, 0, 0, 0, 0)
-    call.simulate()
+    opt = Option(0, 0, 0, 0, 0, 0)
+    opt.simulate()
+    print(opt._S)
+    print(opt.get_params())
 
