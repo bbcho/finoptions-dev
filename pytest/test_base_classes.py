@@ -1,5 +1,6 @@
 import sys
 import os
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
@@ -78,3 +79,54 @@ def test_GBSOption():
         opt.summary(printer=False), str
     ), "GBSOption.summary() failed to produce string."
 
+
+def test_BlackScholesOption():
+
+    opt = ed.BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+
+    assert (
+        round(opt.call(), 6) == 2.061847
+    ), "BlackScholesOption call price does not match fOptions. BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1).call() should equal 2.061847"
+
+
+def test_Black76sOption():
+
+    opt = ed.Black76Option(10.0, 8.0, 1.0, 0.02, 0.1)
+
+    assert (
+        round(opt.call(), 6) == 1.96431
+    ), "Black76Option call price does not match fOptions. Black76Option(10.0, 8.0, 1.0, 0.02, 0.1).call() should equal 1.96431"
+
+
+def test_MiltersenSchwartzOption():
+    opt = ed.MiltersenSchwartzOption(
+        Pt=np.exp(-0.05 / 4),
+        FT=95,
+        K=80,
+        t=1 / 4,
+        T=1 / 2,
+        sigmaS=0.2660,
+        sigmaE=0.2490,
+        sigmaF=0.0096,
+        rhoSE=0.805,
+        rhoSF=0.0805,
+        rhoEF=0.1243,
+        KappaE=1.045,
+        KappaF=0.200,
+    )
+
+    assert (
+        round(opt.call(), 5) == 15.00468
+    ), "MiltersenSchwartzOption call price does not match fOptions. MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200).call() should equal 15.00468"
+
+    assert (
+        round(opt.put(), 6) == 0.191426
+    ), "MiltersenSchwartzOption put price does not match fOptions. MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200).put() should equal 0.191426"
+
+    assert isinstance(
+        opt.summary(printer=False), str
+    ), "MiltersenSchwartzOption.summary() failed to produce string."
+
+    assert isinstance(
+        opt.get_params(), dict
+    ), "MiltersenSchwartzOption.get_params failed to return dictionary of values"

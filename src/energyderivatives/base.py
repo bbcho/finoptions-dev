@@ -96,13 +96,17 @@ class Option(Derivative):
 
     def get_params(self):
         return {
-            "level": self._S,
-            "strike": self._K,
-            "risk-free-rate": self._r,
-            "time-to-maturity": self._t,
-            "b": self._b,
-            "annualized-volatility": self._sigma,
+            "level S": self._S,
+            "strike K": self._K,
+            "risk-free-rate e": self._r,
+            "time-to-maturity t": self._t,
+            "annualized-cost-to-carry": self._b,
+            "annualized-volatility sigma": self._sigma,
         }
+
+    def _check_sigma(self, func):
+        if self._sigma is None:
+            raise ValueError(f"sigma not defined. Required for {func}() method")
 
     def put():
         pass

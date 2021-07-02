@@ -20,6 +20,7 @@ class GBSOption(Option):
     r : float
         Risk-free-rate in decimal format (i.e. 0.01 for 1%).
     b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
         Required otherwise. By default None.
@@ -41,6 +42,8 @@ class GBSOption(Option):
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
     """
 
+    __name__ = "GBSOption"
+
     def __init__(
         self, S: float, K: float, t: float, r: float, b: float, sigma: float = None
     ):
@@ -59,10 +62,6 @@ class GBSOption(Option):
             self._d2 = self._d1 - self._sigma * _np.sqrt(self._t)
         # fmt: on
 
-    def _check_sigma(self, func):
-        if self._sigma is None:
-            raise ValueError(f"sigma not defined. Required for {func}() method")
-
     def call(self):
         """
         Returns the calculated price of a call option according to the
@@ -76,7 +75,7 @@ class GBSOption(Option):
         -------
         >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
-        >>> opt.put()
+        >>> opt.call()
 
         References
         ----------
@@ -486,5 +485,256 @@ class GBSOption(Option):
         return self.summary(printer=False)
 
     def __repr__(self):
-        out = f"GBSOption({self._S}, {self._K}, {self._t}, {self._r}, {self._b}, {self._sigma})"
+        out = f"{self.__name__}({self._S}, {self._K}, {self._t}, {self._r}, {self._b}, {self._sigma})"
         return out
+
+
+class BlackScholesOption(GBSOption):
+    __name__ = "BlackScholesOption"
+
+
+class Black76Option(GBSOption):
+
+    __name__ = "Black76Option"
+
+    def __init__(self, FT, K, t, r, sigma=None):
+        super().__init__(FT, K, t, r, b=0, sigma=sigma)
+        self._FT = self._S
+
+    def summary(self, printer=True):
+        out = f"""
+        Title: Black 1977 Option Valuation
+
+        Parameters:
+            FT = {self._S}
+            K = {self._K}
+            t = {self._t}
+            r = {self._r}
+            sigma = {self._sigma}
+        """
+
+        if self._sigma is not None:
+            price = f"""
+        Option Price:
+            call: {round(self.call(),6)}
+            put: {round(self.put(),6)}
+        """
+            out += price
+
+        if printer == True:
+            print(out)
+        else:
+            return out
+
+    def __repr__(self):
+        out = f"{self.__name__}({self._S}, {self._K}, {self._t}, {self._r}, {self._sigma})"
+        return out
+
+
+class MiltersenSchwartzOption(Option):
+    """
+    The MiltersenSchwartzOption class allows for pricing options on commodity futures. The model is a three 
+    factor model with stochastic futures prices, term structures of convenience yields and interest rates.
+    The model is based on lognormal distributed commodity prices and normal distributed continuously compounded 
+    forward interest rates and futures convenience yields.
+    
+    Parameters
+    ----------
+    Pt : float
+        The zero coupon bond that expires on the option maturity.
+    Ft : float
+        The futures price.
+    K : float
+        The strike price
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    T : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    sigmaS : float
+        The annualized volatility of the spot commodity price (S), e.g.  0.25 means 25%
+    sigmaE : float
+        The annualized volatility of the the future convenience yield (E), e.g. 0.25 means 25%
+    sigmaF : float
+        The annualized volatility of the the forward interest rate (F), e.g.  0.25 means 25%
+    rhoSE : float
+        The correlations between the spot commodity price and the future convenience yield (SE)
+    rhoSF : float
+        The correlations between the spot commodity price and the forward interest rate (SF)
+    rhoEF : float
+        The correlations between the forward interest rate and the future convenience yield (EF)
+    KappaE : float
+        The speed of mean reversion of the forward interest rate (E)
+    KappaF : float
+        The speed of mean reversion of the convenience yield (F)
+
+    References
+    ----------
+    [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+    [2] Miltersen  K.,  Schwartz  E.S.  (1998);Pricing  of  Options  on  Commodity  Futures  with  Stochastic Term Structuures of Convenience Yields and Interest Rates, Journal of Financial and Quantitative Analysis 33, 33–59
+    """
+
+    def __init__(
+        self,
+        Pt: float,
+        FT: float,
+        K: float,
+        t: float,
+        T: float,
+        sigmaS: float,
+        sigmaE: float,
+        sigmaF: float,
+        rhoSE: float,
+        rhoSF: float,
+        rhoEF: float,
+        KappaE: float,
+        KappaF: float,
+    ):
+        self._Pt = Pt
+        self._FT = FT
+        self._K = K
+        self._t = t
+        self._T = T
+        self._sigmaS = sigmaS
+        self._sigmaE = sigmaE
+        self._sigmaF = sigmaF
+        self._rhoSE = rhoSE
+        self._rhoSF = rhoSF
+        self._rhoEF = rhoEF
+        self._KappaE = KappaE
+        self._KappaF = KappaF
+
+        # fmt: off
+        self._vz = (
+            self._sigmaS**2*self._t+2*self._sigmaS*(self._sigmaF*self._rhoSF*1/self._KappaF*(self._t-1/self._KappaF*
+            _np.exp(-self._KappaF*self._T)*(_np.exp(self._KappaF*self._t)-1))-self._sigmaE*self._rhoSE*1/self._KappaE*
+            (self._t-1/self._KappaE*_np.exp(-self._KappaE*self._T)*(_np.exp(self._KappaE*self._t)-1)))+self._sigmaE**2*
+            1/self._KappaE**2*(self._t+1/(2*self._KappaE)*_np.exp(-2*self._KappaE*self._T)*(_np.exp(2*self._KappaE*self._t)-
+            1)-2*1/self._KappaE*_np.exp(-self._KappaE*self._T)*(_np.exp(self._KappaE*self._t)-1))+self._sigmaF**2*
+            1/self._KappaF**2*(self._t+1/(2*self._KappaF)*_np.exp(-2*self._KappaF*self._T)*(_np.exp(2*self._KappaF*self._t)-
+            1)-2*1/self._KappaF*_np.exp(-self._KappaF*self._T)*(_np.exp(self._KappaF*self._t)-1))-2*self._sigmaE*
+            self._sigmaF*self._rhoEF*1/self._KappaE*1/self._KappaF*(self._t-1/self._KappaE*_np.exp(-self._KappaE*self._T)*
+            (_np.exp(self._KappaE*self._t)-1)-1/self._KappaF*_np.exp(-self._KappaF*self._T)*(_np.exp(self._KappaF*self._t)-
+            1)+1/(self._KappaE+self._KappaF)*_np.exp(-(self._KappaE+self._KappaF)*self._T)*(_np.exp((self._KappaE+self._KappaF)*
+            self._t)-1))
+        )
+        self._vxz = (
+            self._sigmaF*1/self._KappaF*(self._sigmaS*self._rhoSF*(self._t-1/self._KappaF*(1-_np.exp(-self._KappaF*
+            self._t)))+self._sigmaF*1/self._KappaF*(self._t-1/self._KappaF*_np.exp(-self._KappaF*self._T)*(_np.exp(self._KappaF*
+            self._t)-1)-1/self._KappaF*(1-_np.exp(-self._KappaF*self._t))+1/(2*self._KappaF)*_np.exp(-self._KappaF*
+            self._T)*(_np.exp(self._KappaF*self._t)-_np.exp(-self._KappaF*self._t)))-self._sigmaE*self._rhoEF*1/self._KappaE*
+            (self._t-1/self._KappaE*_np.exp(-self._KappaE*self._T)*(_np.exp(self._KappaE*self._t)-1)-1/self._KappaF*(1-
+            _np.exp(-self._KappaF*self._t))+1/(self._KappaE+self._KappaF)*_np.exp(-self._KappaE*self._T)*
+            (_np.exp(self._KappaE*self._t)-_np.exp(-self._KappaF*self._t))))
+        )
+        
+        self._vz = _np.sqrt(self._vz)
+
+        self._d1 = (_np.log(self._FT/self._K)-self._vxz+self._vz**2/2)/self._vz
+        self._d2 = (_np.log(self._FT/self._K)-self._vxz-self._vz**2/2)/self._vz
+
+        # fmt: on
+
+    def call(self):
+        """
+        Returns the calculated price of a call option according to the
+        Miltersen Schwartz Option option price model.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> import numpy as np
+        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, 
+                    sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
+        >>> opt.call()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+
+        # fmt: off
+        result = self._Pt*(self._FT*_np.exp(-self._vxz)*self._CND(self._d1)-self._K*self._CND(self._d2))
+        # fmt: on
+
+        return result
+
+    def put(self):
+        """
+        Returns the calculated price of a call option according to the
+        Miltersen Schwartz Option option price model.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> import numpy as np
+        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, 
+                    sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
+        >>> opt.put()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+
+        # fmt: off
+        result = self._Pt*(self._K*self._CND(-self._d2)-self._FT*_np.exp(-self._vxz)*self._CND(-self._d1))
+        # fmt: on
+
+        return result
+
+    def get_params(self):
+        return {
+            "Pt": self._Pt,
+            "FT": self._FT,
+            "K": self._K,
+            "t": self._t,
+            "T": self._T,
+            "sigmaS": self._sigmaS,
+            "sigmaE": self._sigmaE,
+            "sigmaF": self._sigmaF,
+            "rhoSE": self._rhoSE,
+            "rhoSF": self._rhoSF,
+            "rhoEF": self._rhoEF,
+            "KappaE": self._KappaE,
+            "KappaF": self._KappaF,
+        }
+
+    def summary(self, printer=True):
+        out = f"""
+        Title: Miltersen Schwartz Option Valuation
+
+        Parameters:
+            Pt = {self._Pt}
+            FT = {self._FT}
+            K = {self._K}
+            t = {self._t}
+            T = {self._T}
+            sigmaS = {self._sigmaS}
+            sigmaE = {self._sigmaE}
+            sigmaF = {self._sigmaF}
+            rhoSE = {self._rhoSE}
+            rhoSF = {self._rhoSF}
+            rhoEF = {self._rhoEF}
+            KappaE = {self._KappaE}
+            KappaF = {self._KappaF}
+        """
+
+        price = f"""
+        Option Price:
+            call: {round(self.call(),6)}
+            put: {round(self.put(),6)}
+        """
+        out += price
+
+        if printer == True:
+            print(out)
+        else:
+            return out
