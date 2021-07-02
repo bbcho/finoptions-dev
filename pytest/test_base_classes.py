@@ -28,10 +28,53 @@ def test_GBSOption():
         round(opt.put(), 8) == 0.00293811
     ), "GBSOption put price does not match fOptions. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1).put() should equal 0.00293811"
 
-    assert (
-        round(opt.delta(call=True), 6) == 0.981513
-    ), "GBSOption delta calculation for a call option does not match fOptions. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1).delat(call=True) should equal 0.981513"
+    # test greeks, rounded to 6 decimal points
+    greeks = {
+        True: {
+            "delta": 0.981513,
+            "theta": -0.068503,
+            "vega": 0.231779,
+            "rho": 7.753283,
+            "lambda": 4.760358,
+            "gamma": 0.023178,
+            "CofC": 9.81513,
+        },
+        False: {
+            "delta": -0.008537,
+            "theta": -0.010677,
+            "vega": 0.231779,
+            "rho": -0.088307,
+            "lambda": -29.055576,
+            "gamma": 0.023178,
+            "CofC": -0.085368,
+        },
+    }
 
+    for op in greeks.keys():
+        print(opt)
+        test_greeks = opt.greeks(call=op)
+        if op == True:
+            type = "call"
+        else:
+            type = "put"
+        for cp in greeks[op].keys():
+
+            my_val = round(test_greeks[cp], 6)
+            control_val = round(greeks[op][cp], 6)
+            assert (
+                my_val == control_val
+            ), f"GBSOption {cp} calculation for a {type} option does not match fOptions. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1) should result in {cp} of {control_val}"
+
+    # test implied volatility method
+    vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
     assert (
-        round(opt.delta(call=False), 9) == -0.008536847
-    ), "GBSOption delta calculation for a put option does not match fOptions. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1).delat(call=False) should equal -0.008536847"
+        round(vol.volatility(2.5, call=True).root, 6) == 0.342241
+    ), "GBSOption implied volatility calculation does not match fOptions for a call option. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01).volatility(3) should equal 0.342241"
+    assert (
+        round(vol.volatility(2.5, call=False).root, 6) == 1.016087
+    ), "GBSOption implied volatility calculation does not match fOptions for a call option. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01).volatility(3) should equal 1.016087"
+
+    assert isinstance(
+        opt.summary(printer=False), str
+    ), "GBSOption.summary() failed to produce string."
+
