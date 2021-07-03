@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
 import energyderivatives as ed
@@ -130,3 +131,29 @@ def test_MiltersenSchwartzOption():
     assert isinstance(
         opt.get_params(), dict
     ), "MiltersenSchwartzOption.get_params failed to return dictionary of values"
+
+
+def test_FDM_greeks():
+    opt = ed.GBSOption(10.0, 8.0, 1, 0.02, 0.0, 0.1)
+    greeks = ["delta", "theta", "gamma", "lamb", "vega", "rho"]
+
+    for g in greeks:
+        for call in [True, False]:
+            greek_func = getattr(opt, g)
+            if g not in ["gamma", "vega"]:
+                test = np.allclose(
+                    greek_func(call=call, method="analytic"),
+                    greek_func(call=call, method="fdm"),
+                    rtol=0.0001,
+                )
+            else:
+                test = np.allclose(
+                    greek_func(method="analytic"),
+                    greek_func(method="fdm"),
+                    rtol=0.0001,
+                )
+
+            assert (
+                test
+            ), f"FDM greek calc for {g} with call={call} did not match analytics solution from GBSOption. analytic={greek_func(method='analytic')}, fdm={greek_func(method='fdm')}"
+

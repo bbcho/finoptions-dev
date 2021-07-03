@@ -24,6 +24,15 @@ class GBSOption(Option):
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
         Required otherwise. By default None.
+
+    Note
+    ----
+    that setting: 
+    b = r we get Black and Scholes’ stock option model
+    b = r-q we get Merton’s stock option model with continuous dividend yield q
+    b = 0 we get Black’s futures option model
+    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
+    interest rate rf
     
     Returns
     -------
@@ -120,7 +129,7 @@ class GBSOption(Option):
 
         return result
 
-    def delta(self, call: bool = True):
+    def delta(self, call: bool = True, method: str = "analytic"):
         """
         Method to return delta greek for either call or put options.
 
@@ -128,6 +137,8 @@ class GBSOption(Option):
         ----------
         call : bool
             Returns delta greek for call option if True, else returns delta greek for put options. By default True.
+        method : str
+            'analytic' for analytic solution to delta. 'fdm' for Finite Difference Method. By default 'analytic'
 
         Returns
         -------
@@ -144,12 +155,18 @@ class GBSOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         self._check_sigma("delta")
-        if call == True:
-            return _np.exp((self._b - self._r) * self._t) * self._CND(self._d1)
-        else:
-            return _np.exp((self._b - self._r) * self._t) * (self._CND(self._d1) - 1)
 
-    def theta(self, call: bool = True):
+        if method == "analytic":
+            if call == True:
+                return _np.exp((self._b - self._r) * self._t) * self._CND(self._d1)
+            else:
+                return _np.exp((self._b - self._r) * self._t) * (
+                    self._CND(self._d1) - 1
+                )
+        elif method == "fdm":
+            return super().delta(call=call)
+
+    def theta(self, call: bool = True, method: str = "analytic"):
         """
         Method to return theta greek for either call or put options.
 
@@ -157,6 +174,8 @@ class GBSOption(Option):
         ----------
         call : bool
             Returns theta greek for call option if True, else returns theta greek for put options. By default True.
+        method : str
+            'analytic' for analytic solution to delta. 'fdm' for Finite Difference Method. By default 'analytic'
 
         Returns
         -------
@@ -173,33 +192,42 @@ class GBSOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         self._check_sigma("theta")
-        Theta1 = -(
-            self._S
-            * _np.exp((self._b - self._r) * self._t)
-            * self._NDF(self._d1)
-            * self._sigma
-        ) / (2 * _np.sqrt(self._t))
-
-        if call == True:
-            return (
-                Theta1
-                - (self._b - self._r)
-                * self._S
+        if method == "analytic":
+            Theta1 = -(
+                self._S
                 * _np.exp((self._b - self._r) * self._t)
-                * self._CND(+self._d1)
-                - self._r * self._K * _np.exp(-self._r * self._t) * self._CND(+self._d2)
-            )
-        else:
-            return (
-                Theta1
-                + (self._b - self._r)
-                * self._S
-                * _np.exp((self._b - self._r) * self._t)
-                * self._CND(-self._d1)
-                + self._r * self._K * _np.exp(-self._r * self._t) * self._CND(-self._d2)
-            )
+                * self._NDF(self._d1)
+                * self._sigma
+            ) / (2 * _np.sqrt(self._t))
 
-    def vega(self):
+            if call == True:
+                return (
+                    Theta1
+                    - (self._b - self._r)
+                    * self._S
+                    * _np.exp((self._b - self._r) * self._t)
+                    * self._CND(+self._d1)
+                    - self._r
+                    * self._K
+                    * _np.exp(-self._r * self._t)
+                    * self._CND(+self._d2)
+                )
+            else:
+                return (
+                    Theta1
+                    + (self._b - self._r)
+                    * self._S
+                    * _np.exp((self._b - self._r) * self._t)
+                    * self._CND(-self._d1)
+                    + self._r
+                    * self._K
+                    * _np.exp(-self._r * self._t)
+                    * self._CND(-self._d2)
+                )
+        elif method == "fdm":
+            return super().theta(call=call)
+
+    def vega(self, method: str = "analytic"):
         """
         Method to return vega greek for either call or put options.
 
@@ -215,7 +243,7 @@ class GBSOption(Option):
         -------
         >>> import energyderivatives as ed
         >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
-        >>> opt.vega(call=True)
+        >>> opt.vega()
 
         References
         ----------
@@ -223,14 +251,17 @@ class GBSOption(Option):
         """
         self._check_sigma("vega")
         # for both call and put options
-        return (
-            self._S
-            * _np.exp((self._b - self._r) * self._t)
-            * self._NDF(self._d1)
-            * _np.sqrt(self._t)
-        )
+        if method == "analytic":
+            return (
+                self._S
+                * _np.exp((self._b - self._r) * self._t)
+                * self._NDF(self._d1)
+                * _np.sqrt(self._t)
+            )
+        elif method == "fdm":
+            return super().vega()
 
-    def rho(self, call: bool = True):
+    def rho(self, call: bool = True, method: str = "analytic"):
         """
         Method to return rho greek for either call or put options.
 
@@ -238,6 +269,8 @@ class GBSOption(Option):
         ----------
         call : bool
             Returns rho greek for call option if True, else returns rho greek for put options. By default True.
+        method : str
+            'analytic' for analytic solution to delta. 'fdm' for Finite Difference Method. By default 'analytic'
 
         Returns
         -------
@@ -254,32 +287,35 @@ class GBSOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         self._check_sigma("rho")
-        if call == True:
-            price = self.call()
-            if self._b != 0:
-                result = (
-                    self._t
-                    * self._K
-                    * _np.exp(-self._r * self._t)
-                    * self._CND(self._d2)
-                )
+        if method == "analytic":
+            if call == True:
+                price = self.call()
+                if self._b != 0:
+                    result = (
+                        self._t
+                        * self._K
+                        * _np.exp(-self._r * self._t)
+                        * self._CND(self._d2)
+                    )
+                else:
+                    result = -self._t * price
             else:
-                result = -self._t * price
-        else:
-            price = self.put()
-            if self._b != 0:
-                result = (
-                    -self._t
-                    * self._K
-                    * _np.exp(-self._r * self._t)
-                    * self._CND(-self._d2)
-                )
-            else:
-                result = -self._t * price
+                price = self.put()
+                if self._b != 0:
+                    result = (
+                        -self._t
+                        * self._K
+                        * _np.exp(-self._r * self._t)
+                        * self._CND(-self._d2)
+                    )
+                else:
+                    result = -self._t * price
 
-        return result
+            return result
+        elif method == "fdm":
+            return super().rho(call=call)
 
-    def lamb(self, call: bool = True):
+    def lamb(self, call: bool = True, method: str = "analytic"):
         """
         Method to return lambda greek for either call or put options.
 
@@ -303,27 +339,30 @@ class GBSOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         self._check_sigma("lamb")
-        if call == True:
-            price = self.call()
-            result = (
-                _np.exp((self._b - self._r) * self._t)
-                * self._CND(self._d1)
-                * self._S
-                / price
-            )
+        if method == "analytic":
+            if call == True:
+                price = self.call()
+                result = (
+                    _np.exp((self._b - self._r) * self._t)
+                    * self._CND(self._d1)
+                    * self._S
+                    / price
+                )
 
-        else:
-            price = self.put()
-            result = (
-                _np.exp((self._b - self._r) * self._t)
-                * (self._CND(self._d1) - 1)
-                * self._S
-                / price
-            )
+            else:
+                price = self.put()
+                result = (
+                    _np.exp((self._b - self._r) * self._t)
+                    * (self._CND(self._d1) - 1)
+                    * self._S
+                    / price
+                )
 
-        return result
+            return result
+        elif method == "fdm":
+            return super().lamb(call=call)
 
-    def gamma(self):
+    def gamma(self, method: str = "analytic"):
         """
         Method to return gamma greek for either call or put options.
 
@@ -347,11 +386,14 @@ class GBSOption(Option):
         """
         self._check_sigma("gamma")
         # for both call and put options
-        return (
-            _np.exp((self._b - self._r) * self._t)
-            * self._NDF(self._d1)
-            / (self._S * self._sigma * _np.sqrt(self._t))
-        )
+        if method == "analytic":
+            return (
+                _np.exp((self._b - self._r) * self._t)
+                * self._NDF(self._d1)
+                / (self._S * self._sigma * _np.sqrt(self._t))
+            )
+        elif method == "fdm":
+            return super().gamma()
 
     def c_of_c(self, call: bool = True):
         """
@@ -494,6 +536,26 @@ class BlackScholesOption(GBSOption):
 
 
 class Black76Option(GBSOption):
+    """
+    The Black76Option pricing formula is applicable for valuing European call  
+    and European put options on commodity futures. The exact nature of the 
+    underlying commodity varies and may be anything from a precious metal such 
+    as gold or silver to agricultural products.
+    
+    Parameters
+    ----------
+    FT : float
+        Futures price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Required otherwise. By default None.
+    """
 
     __name__ = "Black76Option"
 
@@ -537,6 +599,10 @@ class MiltersenSchwartzOption(Option):
     factor model with stochastic futures prices, term structures of convenience yields and interest rates.
     The model is based on lognormal distributed commodity prices and normal distributed continuously compounded 
     forward interest rates and futures convenience yields.
+
+    The Miltersen Schwartz Option model is a three factor model with stochastic futures prices,term structures 
+    and convenience yields, and interest rates. The model is based on log-normal distributed commodity prices 
+    and normal distributed continuously compounded forward interest rates and future convenience yields.
     
     Parameters
     ----------
@@ -545,7 +611,7 @@ class MiltersenSchwartzOption(Option):
     Ft : float
         The futures price.
     K : float
-        The strike price
+        The strike price.
     t : float
         Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
     T : float
@@ -572,6 +638,8 @@ class MiltersenSchwartzOption(Option):
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
     [2] Miltersen  K.,  Schwartz  E.S.  (1998);Pricing  of  Options  on  Commodity  Futures  with  Stochastic Term Structuures of Convenience Yields and Interest Rates, Journal of Financial and Quantitative Analysis 33, 33–59
     """
+
+    __name__ = "MiltersenSchwartzOption"
 
     def __init__(
         self,
