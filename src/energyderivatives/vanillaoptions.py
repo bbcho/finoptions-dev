@@ -503,6 +503,7 @@ class GBSOption(Option):
 
 class BlackScholesOption(GBSOption):
     __name__ = "BlackScholesOption"
+    __title__ = "Black Scholes Option Valuation"
 
 
 class Black76Option(GBSOption):
@@ -528,39 +529,11 @@ class Black76Option(GBSOption):
     """
 
     __name__ = "Black76Option"
+    __title__ = "Black 1977 Option Valuation"
 
     def __init__(self, FT, K, t, r, sigma=None):
         super().__init__(FT, K, t, r, b=0, sigma=sigma)
         self._FT = self._S
-
-    def summary(self, printer=True):
-        out = f"""
-        Title: Black 1977 Option Valuation
-
-        Parameters:
-            FT = {self._S}
-            K = {self._K}
-            t = {self._t}
-            r = {self._r}
-            sigma = {self._sigma}
-        """
-
-        if self._sigma is not None:
-            price = f"""
-        Option Price:
-            call: {round(self.call(),6)}
-            put: {round(self.put(),6)}
-        """
-            out += price
-
-        if printer == True:
-            print(out)
-        else:
-            return out
-
-    def __repr__(self):
-        out = f"{self.__name__}({self._S}, {self._K}, {self._t}, {self._r}, {self._sigma})"
-        return out
 
 
 class MiltersenSchwartzOption(Option):
