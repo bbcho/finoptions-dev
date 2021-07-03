@@ -52,6 +52,7 @@ class GBSOption(Option):
     """
 
     __name__ = "GBSOption"
+    __title__ = "Black Scholes Option Valuation"
 
     def __init__(
         self, S: float, K: float, t: float, r: float, b: float, sigma: float = None
@@ -70,6 +71,10 @@ class GBSOption(Option):
 
             self._d2 = self._d1 - self._sigma * _np.sqrt(self._t)
         # fmt: on
+
+    def _check_sigma(self, func):
+        if self._sigma is None:
+            raise ValueError(f"sigma not defined. Required for {func}() method")
 
     def call(self):
         """
@@ -313,7 +318,14 @@ class GBSOption(Option):
 
             return result
         elif method == "fdm":
-            return super().rho(call=call)
+            # This only works if the cost to carry b is zero....
+            if self._b == 0:
+                fd = self._make_partial_der("r", call, self, n=1)
+                return float(fd(self._r))
+            else:
+                raise ValueError(
+                    "rho calculation versus finite difference method currently only works if b = 0"
+                )
 
     def lamb(self, call: bool = True, method: str = "analytic"):
         """
@@ -459,17 +471,8 @@ class GBSOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         self._check_sigma("greeks")
-        gk = {
-            "delta": self.delta(call),
-            "theta": self.theta(call),
-            "vega": self.vega(),
-            "rho": self.rho(call),
-            "lambda": self.lamb(call),
-            "gamma": self.gamma(),
-            "CofC": self.c_of_c(call),
-        }
 
-        return gk
+        return super().greeks(call=call)
 
     def volatility(
         self,
@@ -496,39 +499,6 @@ class GBSOption(Option):
         sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
 
         return sol
-
-    def summary(self, printer=True):
-        out = f"""
-        Title: Black Scholes Option Valuation
-
-        Parameters:
-            S = {self._S}
-            K = {self._K}
-            t = {self._t}
-            r = {self._r}
-            b = {self._b}
-            sigma = {self._sigma}
-        """
-
-        if self._sigma is not None:
-            price = f"""
-        Option Price:
-            call: {round(self.call(),6)}
-            put: {round(self.put(),6)}
-        """
-            out += price
-
-        if printer == True:
-            print(out)
-        else:
-            return out
-
-    def __str__(self):
-        return self.summary(printer=False)
-
-    def __repr__(self):
-        out = f"{self.__name__}({self._S}, {self._K}, {self._t}, {self._r}, {self._b}, {self._sigma})"
-        return out
 
 
 class BlackScholesOption(GBSOption):
@@ -640,6 +610,7 @@ class MiltersenSchwartzOption(Option):
     """
 
     __name__ = "MiltersenSchwartzOption"
+    __title__ = "Miltersen Schwartz Option Valuation"
 
     def __init__(
         self,
@@ -775,34 +746,91 @@ class MiltersenSchwartzOption(Option):
             "KappaF": self._KappaF,
         }
 
-    def summary(self, printer=True):
-        out = f"""
-        Title: Miltersen Schwartz Option Valuation
-
-        Parameters:
-            Pt = {self._Pt}
-            FT = {self._FT}
-            K = {self._K}
-            t = {self._t}
-            T = {self._T}
-            sigmaS = {self._sigmaS}
-            sigmaE = {self._sigmaE}
-            sigmaF = {self._sigmaF}
-            rhoSE = {self._rhoSE}
-            rhoSF = {self._rhoSF}
-            rhoEF = {self._rhoEF}
-            KappaE = {self._KappaE}
-            KappaF = {self._KappaF}
+    def delta(self, call: bool = True):
         """
+        Method to return delta greek for either call or put options using Finite Difference Methods.
 
-        price = f"""
-        Option Price:
-            call: {round(self.call(),6)}
-            put: {round(self.put(),6)}
+        Parameters
+        ----------
+        call : bool
+            Returns delta greek for call option if True, else returns delta greek for put options. By default True.
+
+        Returns
+        -------
+        float
         """
-        out += price
+        fd = self._make_partial_der("FT", call, self, n=1)
 
-        if printer == True:
-            print(out)
+        return float(fd(self._FT))
+
+    def vega(self):
+        """
+        Method to return vega greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        fdS = self._make_partial_der("sigmaS", True, self, n=1)
+        fdE = self._make_partial_der("sigmaE", True, self, n=1)
+        fdF = self._make_partial_der("sigmaF", True, self, n=1)
+        return (
+            float(fdS(self._sigmaS)),
+            float(fdE(self._sigmaE)),
+            float(fdF(self._sigmaF)),
+        )
+
+    def greeks(self, call: bool = True):
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+            "CofC": self.c_of_c(call),
+        }
+
+        return gk
+
+    def rho(self):
+        print("rho not defined for this Option")
+
+    def lamb(self, call: bool = True):
+        """
+        Method to return lambda greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        if call == True:
+            price = self.call()
         else:
-            return out
+            price = self.put()
+        return self.delta(call=call) * self._FT / price
+
+    def gamma(self):
+        """
+        Method to return gamma greek for either call or put options.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        fd = self._make_partial_der("FT", True, self, n=2)
+        return float(fd(self._FT))

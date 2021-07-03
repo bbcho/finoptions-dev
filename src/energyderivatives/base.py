@@ -5,26 +5,6 @@ import copy as _copy
 import numdifftools as _nd
 
 
-def _make_partial_der(wrt, call, opt, **kwargs):
-    """
-    Create monad from Option methods call and put for use
-    in calculating the partial derivatives or greeks with 
-    respect to wrt.
-    """
-
-    def _func(x):
-        tmp = opt.copy()
-        tmp.set_param(wrt, x)
-        if call == True:
-            return tmp.call()
-        else:
-            return tmp.put()
-
-    fd = _nd.Derivative(_func, **kwargs)
-
-    return fd
-
-
 class _Base(ABC):
     def __init__(self):
         pass
@@ -89,21 +69,45 @@ class Derivative(_Base):
     pass
 
     @abstractmethod
-    def simulate(self):
-        pass
-
-    @abstractmethod
     def get_params(self):
         pass
+
+    def copy(self):
+        return _copy.deepcopy(self)
 
 
 class Option(Derivative):
     """
     Base class for options
-    
-    put : bool
-        If put is True, initialize a put option object. If put is False, initialize a call option object.
+
+    Parameters
+    ----------
+    S : float
+        Level or index price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Required otherwise. By default None.
+
+    Note
+    ----
+    that setting: 
+    b = r we get Black and Scholes’ stock option model
+    b = r-q we get Merton’s stock option model with continuous dividend yield q
+    b = 0 we get Black’s futures option model
+    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
+    interest rate rf
     """
+
+    __name__ = "Option"
+    __title__ = "Base Option Class"
 
     def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
         self._S = S
@@ -113,8 +117,24 @@ class Option(Derivative):
         self._b = b
         self._sigma = sigma
 
-    def simulate(self):
-        print("sim run")
+    def _make_partial_der(self, wrt, call, opt, **kwargs):
+        """
+        Create monad from Option methods call and put for use
+        in calculating the partial derivatives or greeks with 
+        respect to wrt.
+        """
+
+        def _func(x):
+            tmp = opt.copy()
+            tmp.set_param(wrt, x)
+            if call == True:
+                return tmp.call()
+            else:
+                return tmp.put()
+
+        fd = _nd.Derivative(_func, **kwargs)
+
+        return fd
 
     def get_params(self):
         return {
@@ -147,21 +167,10 @@ class Option(Derivative):
 
         self.__init__(**tmp)
 
-    def copy(self):
-
-        return _copy.deepcopy(self)
-
-    def _check_sigma(self, func):
-        if self._sigma is None:
-            raise ValueError(f"sigma not defined. Required for {func}() method")
-
     def put():
         pass
 
     def call():
-        pass
-
-    def greeks():
         pass
 
     def delta(self, call: bool = True):
@@ -177,9 +186,7 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("delta")
-
-        fd = _make_partial_der("S", call, self, n=1)
+        fd = self._make_partial_der("S", call, self, n=1)
 
         return float(fd(self._S))
 
@@ -196,9 +203,7 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("theta")
-
-        fd = _make_partial_der("t", call, self, n=1, step=1 / 252)
+        fd = self._make_partial_der("t", call, self, n=1, step=1 / 252)
 
         return float(fd(self._t)) * -1
 
@@ -214,9 +219,8 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("vega")
         # same for both call and put options
-        fd = _make_partial_der("sigma", True, self, n=1)
+        fd = self._make_partial_der("sigma", True, self, n=1)
         return float(fd(self._sigma))
 
     def rho(self, call: bool = True):
@@ -232,16 +236,9 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("rho")
-
         # This only works if the cost to carry b is zero....
-        if self._b == 0:
-            fd = _make_partial_der("r", call, self, n=1)
-            return float(fd(self._r))
-        else:
-            raise ValueError(
-                "rho calculation versus finite difference method currently only works if b = 0"
-            )
+        fd = self._make_partial_der("r", call, self, n=1)
+        return float(fd(self._r))
 
     def lamb(self, call: bool = True):
         """
@@ -256,7 +253,6 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("lamb")
         if call == True:
             price = self.call()
         else:
@@ -275,9 +271,8 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("gamma")
         # same for both call and put options
-        fd = _make_partial_der("S", True, self, n=2)
+        fd = self._make_partial_der("S", True, self, n=2)
         return float(fd(self._S))
 
     def c_of_c(self, call: bool = True):
@@ -293,4 +288,62 @@ class Option(Derivative):
         -------
         float
         """
-        self._check_sigma("c_of_c")
+        return None
+
+    def greeks(self, call: bool = True):
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+            "CofC": self.c_of_c(call),
+        }
+
+        return gk
+
+    def summary(self, printer=True):
+        """
+        Print summary report of option
+        
+        Parameters
+        ----------
+        printer : bool
+            True to print summary. False to return a string.
+        """
+        out = f"Title: {self.__title__}\n\nParameters:\n\n"
+
+        params = self.get_params()
+
+        for p in params:
+            out += f"  {p} = {params[p]}\n"
+
+        try:
+            # if self._sigma or its variations are not None add call and put prices
+            price = f"\nOption Price:\n\n  call: {round(self.call(),6)}\n  put: {round(self.put(),6)}"
+            out += price
+        except:
+            pass
+
+        if printer == True:
+            print(out)
+        else:
+            return out
+
+    def __str__(self):
+        return self.summary(printer=False)
+
+    def __repr__(self):
+        out = f"{self.__name__}("
+        params = self.get_params()
+
+        for p in params:
+            out = out + str(params[p]) + ", "
+
+        # get rid of trailing comman and close pararenthesis
+        out = out[:-2]
+        out += ")"
+
+        return out
+
