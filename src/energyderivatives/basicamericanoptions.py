@@ -58,7 +58,7 @@ class RollGeskeWhaleyOption(Option):
     """
 
     __name__ = "RollGeskeWhaleyOption"
-    __title__ = "Roll-Geske-Whaley Calls on Dividend Paying Stocks Valuation"
+    __title__ = "Roll-Geske-Whaley Calls on Dividend Paying Stocks"
 
     def __init__(
         self, S: float, K: float, t: float, td: float, r: float, D: float, sigma: float
@@ -206,3 +206,117 @@ class RollGeskeWhaleyOption(Option):
             print(out)
         else:
             return out
+
+
+class BAWAmericanApproxOption(Option):
+    """
+    Barone-Adesi and Whaley Approximation, calculates the option price of an 
+    American call or put option on an underlying asset for a given cost-of-carry 
+    rate. The quadratic approximation method by Barone-Adesi and Whaley is used.
+
+    Parameters
+    ----------
+    S : float
+        Level or index price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Required otherwise. By default None.
+
+    Note
+    ----
+    that setting: 
+    b = r we get Black and Scholes’ stock option model
+    b = r-q we get Merton’s stock option model with continuous dividend yield q
+    b = 0 we get Black’s futures option model
+    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
+    interest rate rf
+    
+    Returns
+    -------
+    GBSOption object.
+
+    Example
+    -------
+    >>> import energyderivatives as ed
+    >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> opt.call()
+    >>> opt.put()
+    >>> opt.greeks(call=True)
+
+    References
+    ----------
+    [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+    """
+
+    __name__ = "BAWAmericanApproxOption"
+    __title__ = "Barone-Adesi and Whaley Approximation"
+
+    def _bawKc(self):
+        # Newton Raphson algorithm to solve for the critical commodity
+        # price for a Call.
+        # Calculation of seed value, Si
+        n = 2 * self._b / self._sigma ** 2
+        m = 2 * self._r / self._sigma ** 2
+        q2u = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * m)) / 2
+        Su = self._K / (1 - 1 / q2u)
+        h2 = (
+            -(self._b * self._t + 2 * self._sigma * _np.sqrt(self._t))
+            * self._K
+            / (Su - self._K)
+        )
+        Si = self._K + (Su - self._K) * (1 - _np.exp(h2))
+        K = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
+        d1 = (_np.log(Si / K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
+            self._sigma * _np.sqrt(self._t)
+        )
+        Q2 = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * K)) / 2
+        LHS = Si - K
+        RHS = (
+            GBSOption(Si, K, self._t, self._r, self._b, self._sigma).call()
+            + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
+        )
+        bi = (
+            _np.exp((self._b - self._r) * self._t) * self._CND(d1) * (1 - 1 / Q2)
+            + (
+                1
+                - _np.exp((self._b - self._r) * self._t)
+                * self._CND(d1)
+                / (self._sigma * _np.sqrt(self._t))
+            )
+            / Q2
+        )
+        E = 0.000001
+
+        # Newton Raphson algorithm for finding critical price Si
+        while abs(LHS - RHS) / K > E:
+            Si = (K + RHS - bi * Si) / (1 - bi)
+            d1 = (_np.log(Si / K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
+                self._sigma * _np.sqrt(self._t)
+            )
+            LHS = Si - K
+            RHS = (
+                GBSOption(Si, K, self._t, self._r, self._b, self._sigma).call()
+                + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
+            )
+            bi = (
+                _np.exp((self._b - self._r) * self._t) * self._CND(d1) * (1 - 1 / Q2)
+                + (
+                    1
+                    - _np.exp((self._b - self._r) * self._t)
+                    * self._CND(d1)
+                    / (self._sigma * _np.sqrt(self._t))
+                )
+                / Q2
+            )
+
+        # Return Value:
+        return Si
+

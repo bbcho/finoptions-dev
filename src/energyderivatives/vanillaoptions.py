@@ -52,7 +52,7 @@ class GBSOption(Option):
     """
 
     __name__ = "GBSOption"
-    __title__ = "Black Scholes Option Valuation"
+    __title__ = "Black Scholes Option"
 
     def __init__(
         self, S: float, K: float, t: float, r: float, b: float, sigma: float = None
@@ -503,7 +503,7 @@ class GBSOption(Option):
 
 class BlackScholesOption(GBSOption):
     __name__ = "BlackScholesOption"
-    __title__ = "Black Scholes Option Valuation"
+    __title__ = "Black Scholes Option"
 
 
 class Black76Option(GBSOption):
@@ -529,7 +529,7 @@ class Black76Option(GBSOption):
     """
 
     __name__ = "Black76Option"
-    __title__ = "Black 1977 Option Valuation"
+    __title__ = "Black 1977 Option"
 
     def __init__(self, FT, K, t, r, sigma=None):
         super().__init__(FT, K, t, r, b=0, sigma=sigma)
@@ -583,7 +583,7 @@ class MiltersenSchwartzOption(Option):
     """
 
     __name__ = "MiltersenSchwartzOption"
-    __title__ = "Miltersen Schwartz Option Valuation"
+    __title__ = "Miltersen Schwartz Option"
 
     def __init__(
         self,

@@ -370,7 +370,7 @@ class Option(Derivative):
         printer : bool
             True to print summary. False to return a string.
         """
-        out = f"Title: {self.__title__}\n\nParameters:\n\n"
+        out = f"Title: {self.__title__} Valuation\n\nParameters:\n\n"
 
         params = self.get_params()
 
