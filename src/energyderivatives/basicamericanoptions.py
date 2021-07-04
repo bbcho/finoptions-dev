@@ -76,6 +76,20 @@ class RollGeskeWhaleyOption(Option):
         self._big = 100000000
         self._eps = 1.0e-5
 
+    def is_call_optimal(self):
+        """
+        Method to determine if it is currently optimal to exercise the option.
+
+        Returns
+        -------
+        True if it is optimal to exercise the option.
+        False if it is NOT optimal to exercise the option.
+        """
+        if self._D <= self._K * (1 - _np.exp(-self._r * (self._t - self._td))):
+            return False
+        else:
+            return True
+
     def call(self):
         # Compute:
         Sx = self._S - self._D * _np.exp(-self._r * self._td)
@@ -84,7 +98,7 @@ class RollGeskeWhaleyOption(Option):
             result = GBSOption(
                 Sx, self._K, self._t, self._r, b=self._r, sigma=self._sigma
             ).call()
-            print("\nWarning: Not optimal to exercise\n")
+            # print("\nWarning: Not optimal to exercise\n")
             return result
 
         ci = GBSOption(
@@ -185,6 +199,8 @@ class RollGeskeWhaleyOption(Option):
             out += price
         except:
             pass
+
+        out += f"  Optimal to Exercise Call Option: {self.is_call_optimal()}"
 
         if printer == True:
             print(out)
