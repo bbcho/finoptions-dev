@@ -4,6 +4,7 @@ import numpy as _np
 from scipy.optimize import root_scalar as _root_scalar
 import sys as _sys
 import warnings as _warnings
+import numdifftools as _nd
 
 
 class RollGeskeWhaleyOption(_Option):
@@ -38,7 +39,6 @@ class RollGeskeWhaleyOption(_Option):
     
     Notes
     -----
-
     put price does not exist.
 
     Returns
@@ -229,15 +229,6 @@ class BAWAmericanApproxOption(_Option):
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
         Required otherwise. By default None.
-
-    Note
-    ----
-    that setting: 
-    b = r we get Black and Scholes’ stock option model
-    b = r-q we get Merton’s stock option model with continuous dividend yield q
-    b = 0 we get Black’s futures option model
-    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
-    interest rate rf
     
     Returns
     -------
@@ -486,3 +477,230 @@ class BAWAmericanApproxOption(_Option):
         # over-rode parent class vega as it is unstable for larger step sizes of sigma.
         fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
         return float(fd(self._sigma))
+
+
+class BSAmericanApproxOption(_Option):
+    """
+    BSAmericanApproxOption evaluates American calls or puts onstocks, futures, and currencies due to the approximation method of Bjerksund and Stensland (1993)
+    
+    Parameters
+    ----------
+    S : float
+        Level or index price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Required otherwise. By default None.
+
+    Returns
+    -------
+    Option object.
+
+    Example
+    -------
+    >>> import energyderivatives as ed
+    >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> opt.call()
+    >>> opt.put()
+    >>> opt.greeks(call=True)
+
+    References
+    ----------
+    [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+    [2] Bjerksund P., Stensland G. (1993);Closed Form Approximation of American Options, ScandinavianJournal of Management 9, 87–99
+    """
+
+    __name__ = "BSAmericanApproxOption"
+    __title__ = "The Bjerksund and Stensland (1993) American Approximation Option"
+
+    def _make_partial_der(self, wrt, call, opt, **kwargs):
+        """
+        Create monad from Option methods call and put for use
+        in calculating the partial derivatives or greeks with 
+        respect to wrt.
+        """
+        # need to override since call/put method return dicts.
+        def _func(x):
+            tmp = opt.copy()
+            tmp.set_param(wrt, x)
+            if call == True:
+                return tmp.call()["OptionPrice"]
+            else:
+                return tmp.put()["OptionPrice"]
+
+        fd = _nd.Derivative(_func, **kwargs)
+
+        return fd
+
+    def lamb(self, call: bool = True):
+        """
+        Method to return lambda greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        if call == True:
+            price = self.call()["OptionPrice"]
+        else:
+            price = self.put()["OptionPrice"]
+        return self.delta(call=call) * self._S / price
+
+    def vega(self):
+        """
+        Method to return vega greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
+        return float(fd(self._sigma))
+
+    def call(self):
+        """
+        Returns the calculated price of a call option according to the
+        The Bjerksund and Stensland (1993) American Approximation option price model.
+
+        Returns
+        -------
+        dict(str:float) with OptionPrice and TriggerPrice
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> opt = ed.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.call()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        return self._BSAmericanCallApprox(
+            self._S, self._K, self._t, self._r, self._b, self._sigma
+        )
+
+    def put(self):
+        """
+        Returns the calculated price of a put option according to the
+        The Bjerksund and Stensland (1993) American Approximation option price model.
+
+        Returns
+        -------
+        dict(str:float) with OptionPrice and TriggerPrice
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> opt = ed.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.put()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        # Use the Bjerksund and Stensland put-call transformation
+        return self._BSAmericanCallApprox(
+            self._K, self._S, self._t, self._r - self._b, -self._b, self._sigma
+        )
+
+    def _BSAmericanCallApprox(self, S, X, Time, r, b, sigma):
+        # Call Approximation:
+
+        if b >= r:
+            # Never optimal to exersice before maturity
+            result = dict(
+                OptionPrice=_GBSOption(S, X, Time, r, b, sigma).call(),
+                TriggerPrice=_np.nan,
+            )
+        else:
+            Beta = (1 / 2 - b / sigma ** 2) + _np.sqrt(
+                (b / sigma ** 2 - 1 / 2) ** 2 + 2 * r / sigma ** 2
+            )
+            BInfinity = Beta / (Beta - 1) * X
+            B0 = max(X, r / (r - b) * X)
+            ht = -(b * Time + 2 * sigma * _np.sqrt(Time)) * B0 / (BInfinity - B0)
+            # Trigger Price I:
+            I = B0 + (BInfinity - B0) * (1 - _np.exp(ht))
+            alpha = (I - X) * I ** (-Beta)
+            if S >= I:
+                result = dict(OptionPrice=S - X, TriggerPrice=I)
+            else:
+                result = dict(
+                    OptionPrice=alpha * S ** Beta
+                    - alpha * self._bsPhi(S, Time, Beta, I, I, r, b, sigma)
+                    + self._bsPhi(S, Time, 1, I, I, r, b, sigma)
+                    - self._bsPhi(S, Time, 1, X, I, r, b, sigma)
+                    - X * self._bsPhi(S, Time, 0, I, I, r, b, sigma)
+                    + X * self._bsPhi(S, Time, 0, X, I, r, b, sigma),
+                    TriggerPrice=I,
+                )
+
+        return result
+
+    def _bsPhi(self, S, Time, gamma, H, I, r, b, sigma):
+
+        # Utility function phi:
+
+        lamb = (-r + gamma * b + 0.5 * gamma * (gamma - 1) * sigma ** 2) * Time
+        d = -(_np.log(S / H) + (b + (gamma - 0.5) * sigma ** 2) * Time) / (
+            sigma * _np.sqrt(Time)
+        )
+        kappa = 2 * b / (sigma ** 2) + (2 * gamma - 1)
+        result = (
+            _np.exp(lamb)
+            * S ** gamma
+            * (
+                self._CND(d)
+                - (I / S) ** kappa
+                * self._CND(d - 2 * _np.log(I / S) / (sigma * _np.sqrt(Time)))
+            )
+        )
+
+        return result
+
+    def summary(self, printer=True):
+        """
+        Print summary report of option
+        
+        Parameters
+        ----------
+        printer : bool
+            True to print summary. False to return a string.
+        """
+        out = f"Title: {self.__title__} Valuation\n\nParameters:\n\n"
+
+        params = self.get_params()
+
+        for p in params:
+            out += f"  {p} = {params[p]}\n"
+
+        try:
+            # if self._sigma or its variations are not None add call and put prices
+            price = f"\nOption Price:\n\n  call: {round(self.call()['OptionPrice'],6)}, trigger: {round(self.call()['TriggerPrice'],6)}\n  put: {round(self.put()['OptionPrice'],6)}, trigger: {round(self.put()['TriggerPrice'],6)}"
+            out += price
+        except:
+            pass
+
+        if printer == True:
+            print(out)
+        else:
+            return out
+
