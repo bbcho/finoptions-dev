@@ -186,7 +186,7 @@ class RollGeskeWhaleyOption(Option):
         printer : bool
             True to print summary. False to return a string.
         """
-        out = f"Title: {self.__title__}\n\nParameters:\n\n"
+        out = f"Title: {self.__title__} Valuation\n\nParameters:\n\n"
 
         params = self.get_params()
 
@@ -210,7 +210,7 @@ class RollGeskeWhaleyOption(Option):
 
 class BAWAmericanApproxOption(Option):
     """
-    Barone-Adesi and Whaley Approximation, calculates the option price of an 
+    Barone-Adesi and Whaley Approximation. Calculates the option price of an 
     American call or put option on an underlying asset for a given cost-of-carry 
     rate. The quadratic approximation method by Barone-Adesi and Whaley is used.
 
@@ -273,14 +273,14 @@ class BAWAmericanApproxOption(Option):
             / (Su - self._K)
         )
         Si = self._K + (Su - self._K) * (1 - _np.exp(h2))
-        K = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
-        d1 = (_np.log(Si / K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
+        X = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
+        d1 = (_np.log(Si / self._K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
             self._sigma * _np.sqrt(self._t)
         )
-        Q2 = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * K)) / 2
-        LHS = Si - K
+        Q2 = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
+        LHS = Si - self._K
         RHS = (
-            GBSOption(Si, K, self._t, self._r, self._b, self._sigma).call()
+            GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
             + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
         )
         bi = (
@@ -296,14 +296,14 @@ class BAWAmericanApproxOption(Option):
         E = 0.000001
 
         # Newton Raphson algorithm for finding critical price Si
-        while abs(LHS - RHS) / K > E:
-            Si = (K + RHS - bi * Si) / (1 - bi)
-            d1 = (_np.log(Si / K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
-                self._sigma * _np.sqrt(self._t)
-            )
-            LHS = Si - K
+        while abs(LHS - RHS) / self._K > E:
+            Si = (self._K + RHS - bi * Si) / (1 - bi)
+            d1 = (
+                _np.log(Si / self._K) + (self._b + self._sigma ** 2 / 2) * self._t
+            ) / (self._sigma * _np.sqrt(self._t))
+            LHS = Si - self._K
             RHS = (
-                GBSOption(Si, K, self._t, self._r, self._b, self._sigma).call()
+                GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
                 + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
             )
             bi = (
@@ -320,3 +320,169 @@ class BAWAmericanApproxOption(Option):
         # Return Value:
         return Si
 
+    def _bawKp(self):
+        # Newton Raphson algorithm to solve for the critical commodity
+        # price for a Put.
+        # Calculation of seed value, Si
+        n = 2 * self._b / self._sigma ** 2
+        m = 2 * self._r / self._sigma ** 2
+        q1u = (-(n - 1) - _np.sqrt((n - 1) ** 2 + 4 * m)) / 2
+        Su = self._K / (1 - 1 / q1u)
+        h1 = (
+            (self._b * self._t - 2 * self._sigma * _np.sqrt(self._t))
+            * self._K
+            / (self._K - Su)
+        )
+        Si = Su + (self._K - Su) * _np.exp(h1)
+        X = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
+        d1 = (_np.log(Si / self._K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
+            self._sigma * _np.sqrt(self._t)
+        )
+        Q1 = (-(n - 1) - _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
+        LHS = self._K - Si
+        RHS = (
+            GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
+            - (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1)) * Si / Q1
+        )
+        bi = (
+            -_np.exp((self._b - self._r) * self._t) * self._CND(-d1) * (1 - 1 / Q1)
+            - (
+                1
+                + _np.exp((self._b - self._r) * self._t)
+                * self._CND(-d1)
+                / (self._sigma * _np.sqrt(self._t))
+            )
+            / Q1
+        )
+        E = 0.000001
+
+        # Newton Raphson algorithm for finding critical price Si
+        while abs(LHS - RHS) / self._K > E:
+            Si = (self._K - RHS + bi * Si) / (1 + bi)
+            d1 = (
+                _np.log(Si / self._K) + (self._b + self._sigma ** 2 / 2) * self._t
+            ) / (self._sigma * _np.sqrt(self._t))
+            LHS = self._K - Si
+            RHS = (
+                GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
+                - (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1))
+                * Si
+                / Q1
+            )
+            bi = (
+                -_np.exp((self._b - self._r) * self._t) * self._CND(-d1) * (1 - 1 / Q1)
+                - (
+                    1
+                    + _np.exp((self._b - self._r) * self._t)
+                    * self._CND(-d1)
+                    / (self._sigma * _np.sqrt(self._t))
+                )
+                / Q1
+            )
+
+        # Return Value:
+        return Si
+
+    def call(self):
+        """
+        Returns the calculated price of a call option according to the
+        Barone-Adesi and Whaley Approximation option price model.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.call()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+        if self._b >= self._r:
+            result = GBSOption(
+                self._S, self._K, self._t, self._r, self._b, self._sigma
+            ).call()
+        else:
+            Sk = self._bawKc()
+            n = 2 * self._b / self._sigma ** 2
+            X = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
+            d1 = (
+                _np.log(Sk / self._K) + (self._b + self._sigma ** 2 / 2) * self._t
+            ) / (self._sigma * _np.sqrt(self._t))
+            Q2 = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
+            a2 = (Sk / Q2) * (
+                1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)
+            )
+            if self._S < Sk:
+                result = (
+                    GBSOption(
+                        self._S, self._K, self._t, self._r, self._b, self._sigma
+                    ).call()
+                    + a2 * (self._S / Sk) ** Q2
+                )
+            else:
+                result = self._S - self._K
+
+        # Return Value:
+        return result
+
+    def put(self):
+        """
+        Returns the calculated price of a call option according to the
+        Barone-Adesi and Whaley Approximation option price model.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> opt.put()
+
+        References
+        ----------
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+        """
+
+        Sk = self._bawKp()
+        n = 2 * self._b / self._sigma ** 2
+        X = 2 * self._r / (self._sigma ** 2 * (1 - _np.exp(-self._r * self._t)))
+        d1 = (_np.log(Sk / self._K) + (self._b + self._sigma ** 2 / 2) * self._t) / (
+            self._sigma * _np.sqrt(self._t)
+        )
+        Q1 = (-(n - 1) - _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
+        a1 = -(Sk / Q1) * (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1))
+        if self._S > Sk:
+            result = (
+                GBSOption(
+                    self._S, self._K, self._t, self._r, self._b, self._sigma
+                ).put()
+                + a1 * (self._S / Sk) ** Q1
+            )
+        else:
+            result = self._K - self._S
+
+        return result
+
+    def vega(self):
+        """
+        Method to return vega greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        # over-rode parent class vega as it is unstable for larger step sizes of sigma.
+        fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
+        return float(fd(self._sigma))

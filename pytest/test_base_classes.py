@@ -167,3 +167,14 @@ def test_RollGeskeWhaleyOption():
         round(opt.call(), 5) == 4.38603
     ), "RollGeskeWhaleyOption call price does not match fOptions. RollGeskeWhaleyOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30) should equal 4.38603"
 
+
+def test_BAWAmericanApproxOption():
+    opt = ed.BAWAmericanApproxOption(S=100, K=90, t=0.5, r=0.10, b=0, sigma=0.25)
+
+    assert (
+        round(opt.call(), 5) == 12.44166
+    ), "BAWAmericanApproxOption call price does not match fOptions. BAWAmericanApproxOption(S = 100, K = 90, t = 0.5, r = 0.10, b = 0, sigma = 0.25) should equal 12.44166"
+
+    assert (
+        round(opt.put(), 5) == 2.74361
+    ), "BAWAmericanApproxOption call price does not match fOptions. BAWAmericanApproxOption(S = 100, K = 90, t = 0.5, r = 0.10, b = 0, sigma = 0.25) should equal 2.74361"
