@@ -1,12 +1,12 @@
-from .base import Option
-from .vanillaoptions import GBSOption
+from ..base import Option as _Option
+from ..vanillaoptions import GBSOption as _GBSOption
 import numpy as _np
 from scipy.optimize import root_scalar as _root_scalar
 import sys as _sys
 import warnings as _warnings
 
 
-class RollGeskeWhaleyOption(Option):
+class RollGeskeWhaleyOption(_Option):
     """
     Roll-Geske-Whaley Calls on Dividend Paying Stocks
 
@@ -95,13 +95,13 @@ class RollGeskeWhaleyOption(Option):
         Sx = self._S - self._D * _np.exp(-self._r * self._td)
 
         if self._D <= self._K * (1 - _np.exp(-self._r * (self._t - self._td))):
-            result = GBSOption(
+            result = _GBSOption(
                 Sx, self._K, self._t, self._r, b=self._r, sigma=self._sigma
             ).call()
             # print("\nWarning: Not optimal to exercise\n")
             return result
 
-        ci = GBSOption(
+        ci = _GBSOption(
             self._S, self._K, self._t - self._td, self._r, b=self._r, sigma=self._sigma
         ).call()
 
@@ -109,7 +109,7 @@ class RollGeskeWhaleyOption(Option):
 
         while (ci - HighS - self._D + self._K > 0) & (HighS < self._big):
             HighS = HighS * 2
-            ci = GBSOption(
+            ci = _GBSOption(
                 HighS,
                 self._K,
                 self._t - self._td,
@@ -119,14 +119,14 @@ class RollGeskeWhaleyOption(Option):
             ).call()
 
         if HighS > self._big:
-            result = GBSOption(
+            result = _GBSOption(
                 Sx, self._K, self._t, self._r, b=self._r, sigma=self._sigma
             ).call()
             raise ValueError("HighS > big setting")
 
         LowS = 0
         I = HighS * 0.5
-        ci = GBSOption(
+        ci = _GBSOption(
             I, self._K, self._t - self._td, self._r, b=self._r, sigma=self._sigma
         ).call()
 
@@ -139,7 +139,7 @@ class RollGeskeWhaleyOption(Option):
             else:
                 LowS = I
             I = (HighS + LowS) / 2
-            ci = GBSOption(
+            ci = _GBSOption(
                 I, self._K, self._t - self._td, self._r, b=self._r, sigma=self._sigma
             ).call()
 
@@ -208,7 +208,7 @@ class RollGeskeWhaleyOption(Option):
             return out
 
 
-class BAWAmericanApproxOption(Option):
+class BAWAmericanApproxOption(_Option):
     """
     Barone-Adesi and Whaley Approximation. Calculates the option price of an 
     American call or put option on an underlying asset for a given cost-of-carry 
@@ -241,7 +241,7 @@ class BAWAmericanApproxOption(Option):
     
     Returns
     -------
-    GBSOption object.
+    Option object.
 
     Example
     -------
@@ -280,7 +280,7 @@ class BAWAmericanApproxOption(Option):
         Q2 = (-(n - 1) + _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
         LHS = Si - self._K
         RHS = (
-            GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
+            _GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
             + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
         )
         bi = (
@@ -303,7 +303,7 @@ class BAWAmericanApproxOption(Option):
             ) / (self._sigma * _np.sqrt(self._t))
             LHS = Si - self._K
             RHS = (
-                GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
+                _GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).call()
                 + (1 - _np.exp((self._b - self._r) * self._t) * self._CND(d1)) * Si / Q2
             )
             bi = (
@@ -341,7 +341,7 @@ class BAWAmericanApproxOption(Option):
         Q1 = (-(n - 1) - _np.sqrt((n - 1) ** 2 + 4 * X)) / 2
         LHS = self._K - Si
         RHS = (
-            GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
+            _GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
             - (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1)) * Si / Q1
         )
         bi = (
@@ -364,7 +364,7 @@ class BAWAmericanApproxOption(Option):
             ) / (self._sigma * _np.sqrt(self._t))
             LHS = self._K - Si
             RHS = (
-                GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
+                _GBSOption(Si, self._K, self._t, self._r, self._b, self._sigma).put()
                 - (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1))
                 * Si
                 / Q1
@@ -403,7 +403,7 @@ class BAWAmericanApproxOption(Option):
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
         if self._b >= self._r:
-            result = GBSOption(
+            result = _GBSOption(
                 self._S, self._K, self._t, self._r, self._b, self._sigma
             ).call()
         else:
@@ -419,7 +419,7 @@ class BAWAmericanApproxOption(Option):
             )
             if self._S < Sk:
                 result = (
-                    GBSOption(
+                    _GBSOption(
                         self._S, self._K, self._t, self._r, self._b, self._sigma
                     ).call()
                     + a2 * (self._S / Sk) ** Q2
@@ -460,7 +460,7 @@ class BAWAmericanApproxOption(Option):
         a1 = -(Sk / Q1) * (1 - _np.exp((self._b - self._r) * self._t) * self._CND(-d1))
         if self._S > Sk:
             result = (
-                GBSOption(
+                _GBSOption(
                     self._S, self._K, self._t, self._r, self._b, self._sigma
                 ).put()
                 + a1 * (self._S / Sk) ** Q1
