@@ -157,3 +157,13 @@ def test_FDM_greeks():
                 test
             ), f"FDM greek calc for {g} with call={call} did not match analytics solution from GBSOption. analytic={greek_func(method='analytic')}, fdm={greek_func(method='fdm')}"
 
+
+def test_RollGeskeWhaleyOption():
+    opt = ed.RollGeskeWhaleyOption(
+        S=80, K=82, t=1 / 3, td=1 / 4, r=0.06, D=4, sigma=0.30
+    )
+
+    assert (
+        round(opt.call(), 5) == 4.38603
+    ), "RollGeskeWhaleyOption call price does not match fOptions. RollGeskeWhaleyOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30) should equal 4.38603"
+

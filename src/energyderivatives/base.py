@@ -64,6 +64,64 @@ class _Base(ABC):
 
         return result
 
+    def _CBND(self, x1, x2, rho):
+        """
+        Calculate the cumulative bivariate normal distribution function.
+
+        Haug E.G., The Complete Guide to Option Pricing Formulas
+
+        Compute:
+        Take care for the limit rho = +/- 1
+        """
+
+        a = x1
+        b = x2
+        if abs(rho) == 1:
+            rho = rho - (1e-12) * _np.sign(rho)
+        # cat("\n a - b - rho :"); print(c(a,b,rho))
+        X = [0.24840615, 0.39233107, 0.21141819, 0.03324666, 0.00082485334]
+        y = [0.10024215, 0.48281397, 1.0609498, 1.7797294, 2.6697604]
+        a1 = a / _np.sqrt(2 * (1 - rho ** 2))
+        b1 = b / _np.sqrt(2 * (1 - rho ** 2))
+        if (a <= 0) & (b <= 0) & (rho <= 0):
+            Sum1 = 0
+            for I in range(0, 5):
+                for j in range(0, 5):
+                    Sum1 = Sum1 + X[I] * X[j] * _np.exp(
+                        a1 * (2 * y[I] - a1)
+                        + b1 * (2 * y[j] - b1)
+                        + 2 * rho * (y[I] - a1) * (y[j] - b1)
+                    )
+            result = _np.sqrt(1 - rho ** 2) / _np.pi * Sum1
+            return result
+
+        if (a <= 0) & (b >= 0) & (rho >= 0):
+            result = self._CND(a) - self._CBND(a, -b, -rho)
+            return result
+
+        if (a >= 0) & (b <= 0) & (rho >= 0):
+            result = self._CND(b) - self._CBND(-a, b, -rho)
+            return result
+
+        if (a >= 0) & (b >= 0) & (rho <= 0):
+            result = self._CND(a) + self._CND(b) - 1 + self._CBND(-a, -b, rho)
+            return result
+
+        if (a * b * rho) >= 0:
+            rho1 = (
+                (rho * a - b)
+                * _np.sign(a)
+                / _np.sqrt(a ** 2 - 2 * rho * a * b + b ** 2)
+            )
+            rho2 = (
+                (rho * b - a)
+                * _np.sign(b)
+                / _np.sqrt(a ** 2 - 2 * rho * a * b + b ** 2)
+            )
+            delta = (1 - _np.sign(a) * _np.sign(b)) / 4
+            result = self._CBND(a, 0, rho1) + self._CBND(b, 0, rho2) - delta
+            return result
+
 
 class Derivative(_Base):
     pass
