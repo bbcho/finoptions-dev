@@ -771,7 +771,7 @@ class MiltersenSchwartzOption(Option):
         """
         fd = self._make_partial_der("FT", call, self, n=1)
 
-        return float(fd(self._FT))
+        return fd(self._FT) * 1
 
     def vega(self):
         """
@@ -790,9 +790,9 @@ class MiltersenSchwartzOption(Option):
         fdE = self._make_partial_der("sigmaE", True, self, n=1)
         fdF = self._make_partial_der("sigmaF", True, self, n=1)
         return (
-            float(fdS(self._sigmaS)),
-            float(fdE(self._sigmaE)),
-            float(fdF(self._sigmaF)),
+            fdS(self._sigmaS) * 1,
+            fdE(self._sigmaE) * 1,
+            fdF(self._sigmaF) * 1,
         )
 
     def greeks(self, call: bool = True):
@@ -843,4 +843,5 @@ class MiltersenSchwartzOption(Option):
         """
         # same for both call and put options
         fd = self._make_partial_der("FT", True, self, n=2)
-        return float(fd(self._FT))
+        return fd(self._FT) * 1
+

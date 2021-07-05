@@ -246,7 +246,8 @@ class Option(Derivative):
         """
         fd = self._make_partial_der("S", call, self, n=1)
 
-        return float(fd(self._S))
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._S) * 1
 
     def theta(self, call: bool = True):
         """
@@ -263,7 +264,8 @@ class Option(Derivative):
         """
         fd = self._make_partial_der("t", call, self, n=1, step=1 / 252)
 
-        return float(fd(self._t)) * -1
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._t) * -1
 
     def vega(self):
         """
@@ -279,7 +281,9 @@ class Option(Derivative):
         """
         # same for both call and put options
         fd = self._make_partial_der("sigma", True, self, n=1)
-        return float(fd(self._sigma))
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._sigma) * 1
 
     def rho(self, call: bool = True):
         """
@@ -296,7 +300,9 @@ class Option(Derivative):
         """
         # This only works if the cost to carry b is zero....
         fd = self._make_partial_der("r", call, self, n=1)
-        return float(fd(self._r))
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._r) * 1
 
     def lamb(self, call: bool = True):
         """
@@ -331,7 +337,9 @@ class Option(Derivative):
         """
         # same for both call and put options
         fd = self._make_partial_der("S", True, self, n=2)
-        return float(fd(self._S))
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._S) * 1
 
     def c_of_c(self, call: bool = True):
         """

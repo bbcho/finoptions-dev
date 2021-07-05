@@ -63,6 +63,8 @@ class RollGeskeWhaleyOption(_Option):
     def __init__(
         self, S: float, K: float, t: float, td: float, r: float, D: float, sigma: float
     ):
+        if self._check_array(S, K, t, td, r, D, sigma) == True:
+            raise TypeError("Arrays not supported as arguments for this option class")
 
         self._S = S
         self._K = K
@@ -249,6 +251,13 @@ class BAWAmericanApproxOption(_Option):
 
     __name__ = "BAWAmericanApproxOption"
     __title__ = "Barone-Adesi and Whaley Approximation"
+
+    def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
+        # only being used for check_array. Remove __init__ once arrays work.
+        if self._check_array(S, K, t, r, b, sigma) == True:
+            raise TypeError("Arrays not supported as arguments for this option class")
+
+        super().__init__(S, K, t, r, b, sigma)
 
     def _bawKc(self):
         # Newton Raphson algorithm to solve for the critical commodity
@@ -519,6 +528,13 @@ class BSAmericanApproxOption(_Option):
 
     __name__ = "BSAmericanApproxOption"
     __title__ = "The Bjerksund and Stensland (1993) American Approximation Option"
+
+    def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
+        # only being used for check_array. Remove __init__ once arrays work.
+        if self._check_array(S, K, t, r, b, sigma) == True:
+            raise TypeError("Arrays not supported as arguments for this option class")
+
+        super().__init__(S, K, t, r, b, sigma)
 
     def _make_partial_der(self, wrt, call, opt, **kwargs):
         """
