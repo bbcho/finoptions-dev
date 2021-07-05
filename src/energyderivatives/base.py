@@ -375,11 +375,16 @@ class Option(Derivative):
         params = self.get_params()
 
         for p in params:
-            out += f"  {p} = {params[p]}\n"
+            out += f"  {p} = {self._check_string(params[p])}\n"
 
         try:
             # if self._sigma or its variations are not None add call and put prices
-            price = f"\nOption Price:\n\n  call: {round(self.call(),6)}\n  put: {round(self.put(),6)}"
+            if isinstance(self.call(), _np.ndarray):
+                c = self._check_string(self.call().round(2))
+                p = self._check_string(self.put().round(2))
+                price = f"\nOption Price:\n\n  call: {c}\n  put: {p}"
+            else:
+                price = f"\nOption Price:\n\n  call: {round(self.call(),6)}\n  put: {round(self.put(),6)}"
             out += price
         except:
             pass
@@ -397,7 +402,7 @@ class Option(Derivative):
         params = self.get_params()
 
         for p in params:
-            out = out + str(params[p]) + ", "
+            out = out + str(self._check_string(params[p])) + ", "
 
         # get rid of trailing comman and close pararenthesis
         out = out[:-2]
@@ -405,3 +410,37 @@ class Option(Derivative):
 
         return out
 
+    def _check_string(self, x):
+        """
+        helper function for summary method. Checks to see if the variable x is a numpy
+        ndarray type and if it's length is greater than 6. If so, shortens the repsentation
+        so that it fits.
+        """
+        if isinstance(x, _np.ndarray):
+            if x.shape[0] > 6:
+                return _np.array2string(x.round(2), threshold=6)
+
+        return x
+
+    def _check_array(self, *args):
+        """
+        helper function to return True if any args past are numpy ndarrays
+        """
+        for a in args:
+            if isinstance(a, _np.ndarray):
+                return True
+
+        return False
+
+    def _max_array(self, *args):
+        """
+        helper function to get largest ndarray. Assumes at 
+        least one array.
+        """
+        maxArray = _np.array([0])
+        for a in args:
+            if isinstance(a, _np.ndarray):
+                if maxArray.size < a.size:
+                    maxArray = a
+
+        return maxArray

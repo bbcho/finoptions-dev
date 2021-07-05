@@ -70,10 +70,10 @@ def test_GBSOption():
     # test implied volatility method
     vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
     assert (
-        round(vol.volatility(2.5, call=True).root, 6) == 0.342241
+        round(vol.volatility(2.5, call=True), 6) == 0.342241
     ), "GBSOption implied volatility calculation does not match fOptions for a call option. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01).volatility(3) should equal 0.342241"
     assert (
-        round(vol.volatility(2.5, call=False).root, 6) == 1.016087
+        round(vol.volatility(2.5, call=False), 6) == 1.016087
     ), "GBSOption implied volatility calculation does not match fOptions for a call option. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01).volatility(3) should equal 1.016087"
 
     assert isinstance(
