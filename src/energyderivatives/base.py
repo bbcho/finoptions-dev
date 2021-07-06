@@ -12,7 +12,7 @@ class _Base(ABC):
     def _NDF(self, x):
         """
         Calculate the normal distribution function of x
-        
+
         Parameters
         ----------
 
@@ -25,7 +25,7 @@ class _Base(ABC):
 
         References
         ----------
-        [1] Haug E.G., The Complete Guide to Option Pricing Formulas 
+        [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
 
         return _np.exp(-x * x / 2) / _np.sqrt(8 * _atan(1))
@@ -33,7 +33,7 @@ class _Base(ABC):
     def _CND(self, x):
         """
         Calculate the cumulated normal distribution function of x
-        
+
         Parameters
         ----------
 
@@ -151,16 +151,16 @@ class Option(Derivative):
     b : float
         Annualized cost-of-carry rate, e.g. 0.1 means 10%
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
 
     Note
     ----
-    that setting: 
+    that setting:
     b = r we get Black and Scholes’ stock option model
     b = r-q we get Merton’s stock option model with continuous dividend yield q
     b = 0 we get Black’s futures option model
-    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
+    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign
     interest rate rf
     """
 
@@ -178,7 +178,7 @@ class Option(Derivative):
     def _make_partial_der(self, wrt, call, opt, **kwargs):
         """
         Create monad from Option methods call and put for use
-        in calculating the partial derivatives or greeks with 
+        in calculating the partial derivatives or greeks with
         respect to wrt.
         """
 
@@ -372,7 +372,7 @@ class Option(Derivative):
     def summary(self, printer=True):
         """
         Print summary report of option
-        
+
         Parameters
         ----------
         printer : bool
@@ -435,14 +435,15 @@ class Option(Derivative):
         helper function to return True if any args past are numpy ndarrays
         """
         for a in args:
-            if isinstance(a, _np.ndarray):
+            # allows size 1 arrays. somethings greeks return size 1 arrays
+            if isinstance(a, _np.ndarray) and a.size > 1:
                 return True
 
         return False
 
     def _max_array(self, *args):
         """
-        helper function to get largest ndarray. Assumes at 
+        helper function to get largest ndarray. Assumes at
         least one array.
         """
         maxArray = _np.array([0])

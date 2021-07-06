@@ -13,9 +13,9 @@ class RollGeskeWhaleyOption(_Option):
 
     Calculates the option price of an American call on a stock
     paying a single dividend with specified time to divident
-    payout. The option valuation formula derived by Roll, Geske 
+    payout. The option valuation formula derived by Roll, Geske
     and Whaley is used.
-    
+
     Parameters
     ----------
 
@@ -34,9 +34,9 @@ class RollGeskeWhaleyOption(_Option):
     D : float
         A single dividend with time to dividend payout td.
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
-    
+
     Notes
     -----
     put price does not exist.
@@ -182,7 +182,7 @@ class RollGeskeWhaleyOption(_Option):
     def summary(self, printer=True):
         """
         Print summary report of option
-        
+
         Parameters
         ----------
         printer : bool
@@ -212,8 +212,8 @@ class RollGeskeWhaleyOption(_Option):
 
 class BAWAmericanApproxOption(_Option):
     """
-    Barone-Adesi and Whaley Approximation. Calculates the option price of an 
-    American call or put option on an underlying asset for a given cost-of-carry 
+    Barone-Adesi and Whaley Approximation. Calculates the option price of an
+    American call or put option on an underlying asset for a given cost-of-carry
     rate. The quadratic approximation method by Barone-Adesi and Whaley is used.
 
     Parameters
@@ -229,9 +229,9 @@ class BAWAmericanApproxOption(_Option):
     b : float
         Annualized cost-of-carry rate, e.g. 0.1 means 10%
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
-    
+
     Returns
     -------
     Option object.
@@ -491,7 +491,7 @@ class BAWAmericanApproxOption(_Option):
 class BSAmericanApproxOption(_Option):
     """
     BSAmericanApproxOption evaluates American calls or puts onstocks, futures, and currencies due to the approximation method of Bjerksund and Stensland (1993)
-    
+
     Parameters
     ----------
     S : float
@@ -505,7 +505,7 @@ class BSAmericanApproxOption(_Option):
     b : float
         Annualized cost-of-carry rate, e.g. 0.1 means 10%
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
 
     Returns
@@ -539,7 +539,7 @@ class BSAmericanApproxOption(_Option):
     def _make_partial_der(self, wrt, call, opt, **kwargs):
         """
         Create monad from Option methods call and put for use
-        in calculating the partial derivatives or greeks with 
+        in calculating the partial derivatives or greeks with
         respect to wrt.
         """
         # need to override since call/put method return dicts.
@@ -588,7 +588,7 @@ class BSAmericanApproxOption(_Option):
         """
         # same for both call and put options
         fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
-        return float(fd(self._sigma))
+        return fd(self._sigma) * 1
 
     def call(self):
         """
@@ -695,7 +695,7 @@ class BSAmericanApproxOption(_Option):
     def summary(self, printer=True):
         """
         Print summary report of option
-        
+
         Parameters
         ----------
         printer : bool
@@ -719,4 +719,3 @@ class BSAmericanApproxOption(_Option):
             print(out)
         else:
             return out
-
