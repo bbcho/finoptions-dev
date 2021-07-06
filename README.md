@@ -33,7 +33,7 @@ All options follow the same format for calls, puts, greeks and summaries. GBSOpt
 
 ## Calculating Options for Multiple Inputs
 
-The basic options are capable of calculating calls, puts, vols and greeks for multiple inputs at the same time by passing numpy arrays of values as parameters. Currently this only works for the vanilla options.
+The vanilla options are capable of calculating calls, puts, vols and greeks for multiple inputs at the same time by passing numpy arrays of values as parameters. Currently this only works for the vanilla options.
 
 ```python
 import energyderivatives as ed
