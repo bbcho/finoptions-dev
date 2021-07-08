@@ -520,7 +520,7 @@ class Option(Derivative):
                     _func,
                     (self, call, price),
                     bracket=[-10, 10],
-                    rtol=tol,
+                    xtol=tol,
                     maxiter=maxiter,
                 )
                 # sol = _opt.brentq(_func, 1, 10000, xtol=tol, maxiter=maxiter)
@@ -529,7 +529,7 @@ class Option(Derivative):
                     _func,
                     (self, call, price),
                     bracket=[-10, 10],
-                    rtol=tol,
+                    xtol=tol,
                     maxiter=maxiter,
                 ).root
 
