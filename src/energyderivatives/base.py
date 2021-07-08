@@ -459,6 +459,17 @@ class Option(Derivative):
 
         return maxArray
 
+    def _func(sigma, obj, call, price):
+        """
+        helper function to be used for volatility root finding.
+        """
+        temp = obj.copy()
+        temp.set_param("sigma", sigma)
+        if call == True:
+            return price - temp.call()
+        else:
+            return price - temp.put()
+
     def _volatility(
         self,
         price: float,
@@ -466,6 +477,7 @@ class Option(Derivative):
         tol=_sys.float_info.epsilon,
         maxiter=10000,
         verbose=False,
+        _func=_func,
     ):
         """
         Compute the implied volatility of the GBSOption.
@@ -493,30 +505,32 @@ class Option(Derivative):
         if self._sigma is not None:
             _warnings.warn("sigma is not None but calculating implied volatility.")
 
-        def _func(sigma):
-            temp = self.copy()
-            temp.set_param("sigma", sigma)
-            if call == True:
-                return price - temp.call()
-            else:
-                return price - temp.put()
-
         # check to see if arrays were past vs scalars.
         if self._check_array(price, *self.get_params().values()):
             # if arrays, use root function
             a = self._max_array(price, *self.get_params().values())
             if verbose == True:
-                sol = _root(_func, x0=_np.ones_like(a))
+                sol = _root(_func, args=(self, call, price), x0=_np.ones_like(a))
             else:
-                sol = _root(_func, x0=_np.ones_like(a)).x
+                sol = _root(_func, args=(self, call, price), x0=_np.ones_like(a)).x
         else:
             # if scalars use root_scalar function
             if verbose == True:
-                # sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
-                sol = _opt.brentq(_func, 1, 10000, xtol=tol, maxiter=maxiter)
+                sol = _root_scalar(
+                    _func,
+                    (self, call, price),
+                    bracket=[-10, 10],
+                    rtol=tol,
+                    maxiter=maxiter,
+                )
+                # sol = _opt.brentq(_func, 1, 10000, xtol=tol, maxiter=maxiter)
             else:
                 sol = _root_scalar(
-                    _func, bracket=[-10, 10], xtol=tol, maxiter=maxiter
+                    _func,
+                    (self, call, price),
+                    bracket=[-10, 10],
+                    rtol=tol,
+                    maxiter=maxiter,
                 ).root
 
         return sol
