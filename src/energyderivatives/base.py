@@ -3,6 +3,11 @@ import numpy as _np
 from math import atan as _atan
 import copy as _copy
 import numdifftools as _nd
+import sys as _sys
+import warnings as _warnings
+from scipy.optimize import root_scalar as _root_scalar
+from scipy.optimize import root as _root
+import scipy.optimize as _opt
 
 
 class _Base(ABC):
@@ -453,3 +458,65 @@ class Option(Derivative):
                     maxArray = a
 
         return maxArray
+
+    def _volatility(
+        self,
+        price: float,
+        call: bool = True,
+        tol=_sys.float_info.epsilon,
+        maxiter=10000,
+        verbose=False,
+    ):
+        """
+        Compute the implied volatility of the GBSOption.
+
+        Parameters
+        ----------
+        price : float
+            Current price of the option
+        call : bool
+            Returns implied volatility for call option if True, else returns implied volatility for put options. By default True.
+        tol : float
+            max tolerance to fit the price to. By default system tolerance.
+        maxiter : int
+            number of iterations to run to fit price.
+        verbose : bool
+            True to return full optimization details from root finder function. False to just return the implied volatility numbers.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        """
+        if self._sigma is not None:
+            _warnings.warn("sigma is not None but calculating implied volatility.")
+
+        def _func(sigma):
+            temp = self.copy()
+            temp.set_param("sigma", sigma)
+            if call == True:
+                return price - temp.call()
+            else:
+                return price - temp.put()
+
+        # check to see if arrays were past vs scalars.
+        if self._check_array(price, *self.get_params().values()):
+            # if arrays, use root function
+            a = self._max_array(price, *self.get_params().values())
+            if verbose == True:
+                sol = _root(_func, x0=_np.ones_like(a))
+            else:
+                sol = _root(_func, x0=_np.ones_like(a)).x
+        else:
+            # if scalars use root_scalar function
+            if verbose == True:
+                # sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
+                sol = _opt.brentq(_func, 1, 10000, xtol=tol, maxiter=maxiter)
+            else:
+                sol = _root_scalar(
+                    _func, bracket=[-10, 10], xtol=tol, maxiter=maxiter
+                ).root
+
+        return sol

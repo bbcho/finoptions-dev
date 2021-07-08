@@ -24,7 +24,7 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
     def call(self, n: int = 5, type: str = "european"):
         """
         Returns the calculated price of a call option according to the
-        Cox-Ross-Rubinstein Binomial Tree Option Model option price model.
+        Cox-Ross-Rubinstein Binomial Tree option price model.
 
         Parameters
         ----------
@@ -56,7 +56,7 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
     def put(self, n: int = 5, type: str = "european"):
         """
         Returns the calculated price of a put option according to the
-        Cox-Ross-Rubinstein Binomial Tree Option Model option price model.
+        Cox-Ross-Rubinstein Binomial Tree option price model.
 
         Parameters
         ----------

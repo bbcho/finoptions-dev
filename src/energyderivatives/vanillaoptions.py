@@ -23,18 +23,18 @@ class GBSOption(Option):
     b : float
         Annualized cost-of-carry rate, e.g. 0.1 means 10%
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
 
     Note
     ----
-    that setting: 
+    that setting:
     b = r we get Black and Scholes’ stock option model
     b = r-q we get Merton’s stock option model with continuous dividend yield q
     b = 0 we get Black’s futures option model
-    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign 
+    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign
     interest rate rf
-    
+
     Returns
     -------
     GBSOption object.
@@ -506,34 +506,36 @@ class GBSOption(Option):
         Example
         -------
         """
-        if self._sigma is not None:
-            _warnings.warn("sigma is not None but calculating implied volatility.")
+        # if self._sigma is not None:
+        #     _warnings.warn("sigma is not None but calculating implied volatility.")
 
-        def _func(sigma):
-            temp = GBSOption(
-                S=self._S, K=self._K, t=self._t, r=self._r, b=self._b, sigma=sigma
-            )
-            if call == True:
-                return price - temp.call()
-            else:
-                return price - temp.put()
+        # def _func(sigma):
+        #     temp = GBSOption(
+        #         S=self._S, K=self._K, t=self._t, r=self._r, b=self._b, sigma=sigma
+        #     )
+        #     if call == True:
+        #         return price - temp.call()
+        #     else:
+        #         return price - temp.put()
 
-        # check to see if arrays were past vs scalars.
-        if self._check_array(price, self._S, self._K, self._t, self._r, self._b):
-            # if arrays, use root function
-            a = self._max_array(price, self._S, self._K, self._t, self._r, self._b)
-            if verbose == True:
-                sol = _root(_func, x0=_np.ones_like(a))
-            else:
-                sol = _root(_func, x0=_np.ones_like(a)).x
-        else:
-            # if scalars use root_scalar function
-            if verbose == True:
-                sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
-            else:
-                sol = _root_scalar(
-                    _func, bracket=[-10, 10], xtol=tol, maxiter=maxiter
-                ).root
+        # # check to see if arrays were past vs scalars.
+        # if self._check_array(price, self._S, self._K, self._t, self._r, self._b):
+        #     # if arrays, use root function
+        #     a = self._max_array(price, self._S, self._K, self._t, self._r, self._b)
+        #     if verbose == True:
+        #         sol = _root(_func, x0=_np.ones_like(a))
+        #     else:
+        #         sol = _root(_func, x0=_np.ones_like(a)).x
+        # else:
+        #     # if scalars use root_scalar function
+        #     if verbose == True:
+        #         sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
+        #     else:
+        #         sol = _root_scalar(
+        #             _func, bracket=[-10, 10], xtol=tol, maxiter=maxiter
+        #         ).root
+
+        sol = self._volatility(price, call, tol, maxiter, verbose)
 
         return sol
 
@@ -545,11 +547,11 @@ class BlackScholesOption(GBSOption):
 
 class Black76Option(GBSOption):
     """
-    The Black76Option pricing formula is applicable for valuing European call  
-    and European put options on commodity futures. The exact nature of the 
-    underlying commodity varies and may be anything from a precious metal such 
+    The Black76Option pricing formula is applicable for valuing European call
+    and European put options on commodity futures. The exact nature of the
+    underlying commodity varies and may be anything from a precious metal such
     as gold or silver to agricultural products.
-    
+
     Parameters
     ----------
     FT : float
@@ -561,7 +563,7 @@ class Black76Option(GBSOption):
     r : float
         Risk-free-rate in decimal format (i.e. 0.01 for 1%).
     sigma : float
-        Annualized volatility of the underlying asset. Optional if calculating implied volatility. 
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
     """
 
@@ -575,15 +577,15 @@ class Black76Option(GBSOption):
 
 class MiltersenSchwartzOption(Option):
     """
-    The MiltersenSchwartzOption class allows for pricing options on commodity futures. The model is a three 
+    The MiltersenSchwartzOption class allows for pricing options on commodity futures. The model is a three
     factor model with stochastic futures prices, term structures of convenience yields and interest rates.
-    The model is based on lognormal distributed commodity prices and normal distributed continuously compounded 
+    The model is based on lognormal distributed commodity prices and normal distributed continuously compounded
     forward interest rates and futures convenience yields.
 
-    The Miltersen Schwartz Option model is a three factor model with stochastic futures prices,term structures 
-    and convenience yields, and interest rates. The model is based on log-normal distributed commodity prices 
+    The Miltersen Schwartz Option model is a three factor model with stochastic futures prices,term structures
+    and convenience yields, and interest rates. The model is based on log-normal distributed commodity prices
     and normal distributed continuously compounded forward interest rates and future convenience yields.
-    
+
     Parameters
     ----------
     Pt : float
@@ -696,7 +698,7 @@ class MiltersenSchwartzOption(Option):
         -------
         >>> import energyderivatives as ed
         >>> import numpy as np
-        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, 
+        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
                     sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
         >>> opt.call()
 
@@ -724,7 +726,7 @@ class MiltersenSchwartzOption(Option):
         -------
         >>> import energyderivatives as ed
         >>> import numpy as np
-        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660, 
+        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
                     sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
         >>> opt.put()
 
@@ -844,4 +846,3 @@ class MiltersenSchwartzOption(Option):
         # same for both call and put options
         fd = self._make_partial_der("FT", True, self, n=2)
         return fd(self._FT) * 1
-

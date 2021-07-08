@@ -61,7 +61,14 @@ class RollGeskeWhaleyOption(_Option):
     __title__ = "Roll-Geske-Whaley Calls on Dividend Paying Stocks"
 
     def __init__(
-        self, S: float, K: float, t: float, td: float, r: float, D: float, sigma: float
+        self,
+        S: float,
+        K: float,
+        t: float,
+        td: float,
+        r: float,
+        D: float,
+        sigma: float = None,
     ):
         if self._check_array(S, K, t, td, r, D, sigma) == True:
             raise TypeError("Arrays not supported as arguments for this option class")
@@ -209,6 +216,38 @@ class RollGeskeWhaleyOption(_Option):
         else:
             return out
 
+    def volatility(
+        self,
+        price: float,
+        tol=_sys.float_info.epsilon,
+        maxiter=10000,
+        verbose=False,
+    ):
+        """
+        Compute the implied volatility of the RollGeskeWhaleyOption.
+
+        Parameters
+        ----------
+        price : float
+            Current price of the option
+        tol : float
+            max tolerance to fit the price to. By default system tolerance.
+        maxiter : int
+            number of iterations to run to fit price.
+        verbose : bool
+            True to return full optimization details from root finder function. False to just return the implied volatility numbers.
+
+        Returns
+        -------
+        float
+
+        Example
+        -------
+        """
+        sol = self._volatility(price, True, tol, maxiter, verbose)
+
+        return sol
+
 
 class BAWAmericanApproxOption(_Option):
     """
@@ -252,7 +291,9 @@ class BAWAmericanApproxOption(_Option):
     __name__ = "BAWAmericanApproxOption"
     __title__ = "Barone-Adesi and Whaley Approximation"
 
-    def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
+    def __init__(
+        self, S: float, K: float, t: float, r: float, b: float, sigma: float = None
+    ):
         # only being used for check_array. Remove __init__ once arrays work.
         if self._check_array(S, K, t, r, b, sigma) == True:
             raise TypeError("Arrays not supported as arguments for this option class")
@@ -529,7 +570,9 @@ class BSAmericanApproxOption(_Option):
     __name__ = "BSAmericanApproxOption"
     __title__ = "The Bjerksund and Stensland (1993) American Approximation Option"
 
-    def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
+    def __init__(
+        self, S: float, K: float, t: float, r: float, b: float, sigma: float = None
+    ):
         # only being used for check_array. Remove __init__ once arrays work.
         if self._check_array(S, K, t, r, b, sigma) == True:
             raise TypeError("Arrays not supported as arguments for this option class")
