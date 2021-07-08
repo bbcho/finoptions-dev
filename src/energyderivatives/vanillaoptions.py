@@ -554,7 +554,7 @@ class Black76Option(GBSOption):
 
     Parameters
     ----------
-    S : float
+    FT : float
         Futures price.
     K : float
         Strike price.
@@ -570,9 +570,19 @@ class Black76Option(GBSOption):
     __name__ = "Black76Option"
     __title__ = "Black 1977 Option"
 
-    def __init__(self, S, K, t, r, sigma=None):
-        super().__init__(S, K, t, r, b=0, sigma=sigma)
+    def __init__(self, FT, K, t, r, sigma=None):
+        super().__init__(FT, K, t, r, b=0, sigma=sigma)
         # self._FT = self._S
+
+    def get_params(self):
+        return {
+            "FT": self._S,
+            "K": self._K,
+            "t": self._t,
+            "r": self._r,
+            "b": self._b,
+            "sigma": self._sigma,
+        }
 
     def set_param(self, x: str, value: float):
         """
@@ -613,7 +623,7 @@ class MiltersenSchwartzOption(Option):
     ----------
     Pt : float
         The zero coupon bond that expires on the option maturity.
-    Ft : float
+    FT : float
         The futures price.
     K : float
         The strike price.
