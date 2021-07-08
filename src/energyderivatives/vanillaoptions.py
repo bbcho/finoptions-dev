@@ -824,11 +824,21 @@ class MiltersenSchwartzOption(Option):
         fdS = self._make_partial_der("sigmaS", True, self, n=1)
         fdE = self._make_partial_der("sigmaE", True, self, n=1)
         fdF = self._make_partial_der("sigmaF", True, self, n=1)
-        return (
-            fdS(self._sigmaS) * 1,
-            fdE(self._sigmaE) * 1,
-            fdF(self._sigmaF) * 1,
+        result = _np.array(
+            (
+                fdS(self._sigmaS) * 1,
+                fdE(self._sigmaE) * 1,
+                fdF(self._sigmaF) * 1,
+            )
         )
+
+        # if returning a multi-dim array because arrays were passed as inputs, transpose prior
+        # to returing results so that each element of the array input corresponds to a row
+        # in the result
+        if self._check_array(fdS(self._sigmaS) * 1) == True:
+            result = result.T
+
+        return result
 
     def greeks(self, call: bool = True):
         gk = {
