@@ -556,7 +556,7 @@ class BSAmericanApproxOption(_Option):
     Example
     -------
     >>> import energyderivatives as ed
-    >>> opt = ed.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> opt = ed.basic_american_options.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
     >>> opt.call()
     >>> opt.put()
     >>> opt.greeks(call=True)

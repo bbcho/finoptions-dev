@@ -554,7 +554,7 @@ class Black76Option(GBSOption):
 
     Parameters
     ----------
-    FT : float
+    S : float
         Futures price.
     K : float
         Strike price.
@@ -570,9 +570,32 @@ class Black76Option(GBSOption):
     __name__ = "Black76Option"
     __title__ = "Black 1977 Option"
 
-    def __init__(self, FT, K, t, r, sigma=None):
-        super().__init__(FT, K, t, r, b=0, sigma=sigma)
-        self._FT = self._S
+    def __init__(self, S, K, t, r, sigma=None):
+        super().__init__(S, K, t, r, b=0, sigma=sigma)
+        # self._FT = self._S
+
+    def set_param(self, x: str, value: float):
+        """
+        Method to change a parameter once the class hass been initiatized.
+
+        Parameters
+        ----------
+        x : str
+            Name of parameter to change
+        value : float
+            New value to give to parameter
+
+        Returns
+        -------
+        None
+        """
+
+        tmp = self.get_params()
+        tmp[x] = value
+
+        del tmp["b"]  # delete b prior to re-init
+
+        self.__init__(**tmp)
 
 
 class MiltersenSchwartzOption(Option):
