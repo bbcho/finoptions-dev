@@ -13,25 +13,86 @@ class BiTreeOption:
 
 
 class CRRBinomialTreeOption(_Option, BiTreeOption):
-    def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
+    """
+    Binomial models were first suggested by Cox, Ross and Rubinstein (1979), CRR,
+    and then became widely used because of its intuition and easy implementation. Binomial trees are
+    constructedon a discrete-time lattice. With the time between two trading events shrinking to zero,
+    the evolution of the price converges weakly to a lognormal diffusion. Within this mode the European
+    options value converges to the value given by the Black-Scholes formula.
+
+    Parameters
+    ----------
+    S : float
+        Level or index price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
+        Required otherwise. By default None.
+
+    Returns
+    -------
+    CRRBinomialTreeOption object.
+
+    Example
+    -------
+    >>> import energyderivatives as ed
+    >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
+    >>> opt.call()
+    >>> opt.put()
+    >>> opt.call(type='american')
+    >>> opt.greeks(call=True)
+
+    References
+    ----------
+    [1] Haug E.G., The Complete Guide to Option Pricing Formulas
+    """
+
+    __name__ = "CRRBinomialTreeOption"
+    __title__ = "CRR Binomial Tree Model"
+
+    def __init__(
+        self,
+        S: float,
+        K: float,
+        t: float,
+        r: float,
+        b: float,
+        sigma: float,
+        type: str = "european",
+        n: int = 5,
+    ):
         self._S = S
         self._K = K
         self._t = t
         self._r = r
         self._b = b
         self._sigma = sigma
+        self._n = n
+        self._type = type
 
-    def call(self, n: int = 5, type: str = "european"):
+    def get_params(self):
+        return {
+            "S": self._S,
+            "K": self._K,
+            "t": self._t,
+            "r": self._r,
+            "b": self._b,
+            "sigma": self._sigma,
+            "type": self._type,
+            "n": self._n,
+        }
+
+    def call(self):
         """
         Returns the calculated price of a call option according to the
         Cox-Ross-Rubinstein Binomial Tree option price model.
-
-        Parameters
-        ----------
-        n : int
-            Number of time steps, by default 5.
-        type : str
-            'european' for european option, 'american' for american option. By default "european"
 
         Returns
         -------
@@ -40,9 +101,8 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         Example
         -------
         >>> import energyderivatives as ed
-        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5)
-        >>> opt.call(n=5)
-        >>> opt.call(n=5, type='american)
+        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
+        >>> opt.call()
 
         References
         ----------
@@ -50,20 +110,12 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         """
 
         z = 1
+        return self._calc_price(z, self._n, self._type)
 
-        return self._calc_price(z, n, type)
-
-    def put(self, n: int = 5, type: str = "european"):
+    def put(self):
         """
         Returns the calculated price of a put option according to the
         Cox-Ross-Rubinstein Binomial Tree option price model.
-
-        Parameters
-        ----------
-        n : int
-            Number of time steps, by default 5.
-        type : str
-            'european' for european option, 'american' for american option. By default "european"
 
         Returns
         -------
@@ -72,9 +124,8 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         Example
         -------
         >>> import energyderivatives as ed
-        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4)
-        >>> opt.put(n=5)
-        >>> opt.put(n=5, type='american)
+        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
+        >>> opt.put()
 
         References
         ----------
@@ -82,7 +133,59 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         """
 
         z = -1
-        return self._calc_price(z, n, type)
+        return self._calc_price(z, self._n, self._type)
+
+    def summary(self, printer=True):
+        """
+        Print summary report of option
+
+        Parameters
+        ----------
+        printer : bool
+            True to print summary. False to return a string.
+        """
+        out = f"Title: {self.__title__} Valuation\n\nParameters:\n\n"
+
+        params = self.get_params()
+
+        for p in params:
+            out += f"  {p} = {self._check_string(params[p])}\n"
+
+        try:
+            # if self._sigma or its variations are not None add call and put prices
+            if isinstance(self.call(), _np.ndarray):
+                c = self._check_string(self.call().round(2))
+                p = self._check_string(self.put().round(2))
+                price = f"\nOption Price:\n\n  call-{self._type}: {c}\n  put-{self._type}: {p}"
+            else:
+                price = f"\nOption Price:\n\n  call-{self._type}: {round(self.call(),6)}\n  put-{self._type}: {round(self.put(),6)}"
+            out += price
+        except:
+            pass
+
+        if printer == True:
+            print(out)
+        else:
+            return out
+
+    def _make_partial_der(self, wrt, call, opt, **kwargs):
+        """
+        Create monad from Option methods call and put for use
+        in calculating the partial derivatives or greeks with
+        respect to wrt.
+        """
+
+        def _func(x):
+            tmp = opt.copy()
+            tmp.set_param(wrt, x)
+            if call == True:
+                return tmp.call()
+            else:
+                return tmp.put()
+
+        fd = _nd.Derivative(_func, **kwargs)
+
+        return fd
 
     def _calc_price(self, z, n, type):
         dt = self._t / n

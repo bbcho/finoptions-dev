@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 import energyderivatives as ed
 
 
-def test_vanilla():
+def test_vanilla_array():
     #fmt: off
     opt_test = [
         (ed, "GBSOption", {"S": 10.0, "t": 1.0, "r": 0.02, "b": 0.01, "sigma": 0.2}, {'vol':True}),
