@@ -168,24 +168,24 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         else:
             return out
 
-    def _make_partial_der(self, wrt, call, opt, **kwargs):
-        """
-        Create monad from Option methods call and put for use
-        in calculating the partial derivatives or greeks with
-        respect to wrt.
-        """
+    # def _make_partial_der(self, wrt, call, opt, **kwargs):
+    #     """
+    #     Create monad from Option methods call and put for use
+    #     in calculating the partial derivatives or greeks with
+    #     respect to wrt.
+    #     """
 
-        def _func(x):
-            tmp = opt.copy()
-            tmp.set_param(wrt, x)
-            if call == True:
-                return tmp.call()
-            else:
-                return tmp.put()
+    #     def _func(x):
+    #         tmp = opt.copy()
+    #         tmp.set_param(wrt, x)
+    #         if call == True:
+    #             return tmp.call()
+    #         else:
+    #             return tmp.put()
 
-        fd = _nd.Derivative(_func, **kwargs)
+    #     fd = _nd.Derivative(_func, **kwargs)
 
-        return fd
+    #     return fd
 
     def _calc_price(self, z, n, type):
         dt = self._t / n
