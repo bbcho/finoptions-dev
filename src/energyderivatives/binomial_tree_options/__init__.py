@@ -1,10 +1,11 @@
-from ..base import Option as _Option
+from ..base import GreeksFDM, Option as _Option
 from ..vanillaoptions import GBSOption as _GBSOption
 import numpy as _np
 from scipy.optimize import root_scalar as _root_scalar
 import sys as _sys
 import warnings as _warnings
 import numdifftools as _nd
+from ..utils import docstring_from
 
 
 class BiTreeOption:
@@ -76,6 +77,8 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         self._sigma = sigma
         self._n = n
         self._type = type
+
+        self._greeks = GreeksFDM(self)
 
     def get_params(self):
         return {
@@ -168,24 +171,33 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         else:
             return out
 
-    # def _make_partial_der(self, wrt, call, opt, **kwargs):
-    #     """
-    #     Create monad from Option methods call and put for use
-    #     in calculating the partial derivatives or greeks with
-    #     respect to wrt.
-    #     """
+    @docstring_from(GreeksFDM.delta)
+    def delta(self, call: bool = True):
+        return self._greeks.delta(call=call)
 
-    #     def _func(x):
-    #         tmp = opt.copy()
-    #         tmp.set_param(wrt, x)
-    #         if call == True:
-    #             return tmp.call()
-    #         else:
-    #             return tmp.put()
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
 
-    #     fd = _nd.Derivative(_func, **kwargs)
+    @docstring_from(GreeksFDM.vega)
+    def vega(self):
+        return self._greeks.vega()
 
-    #     return fd
+    @docstring_from(GreeksFDM.rho)
+    def rho(self, call: bool = True):
+        return self._greeks.rho(call=call)
+
+    @docstring_from(GreeksFDM.lamb)
+    def lamb(self, call: bool = True):
+        return self._greeks.lamb(call=call)
+
+    @docstring_from(GreeksFDM.gamma)
+    def gamma(self):
+        return self._greeks.gamma()
+
+    @docstring_from(GreeksFDM.greeks)
+    def greeks(self, call: bool = True):
+        return self._greeks.greeks(call=call)
 
     def _calc_price(self, z, n, type):
         dt = self._t / n

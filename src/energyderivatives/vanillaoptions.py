@@ -4,6 +4,7 @@ from scipy.optimize import root_scalar as _root_scalar
 from scipy.optimize import root as _root
 import sys as _sys
 import warnings as _warnings
+from .utils import docstring_from
 
 
 class GBSOption(Option):
@@ -474,10 +475,19 @@ class GBSOption(Option):
         """
         self._check_sigma("greeks")
 
-        out = self._greeks.greeks(call=call)
-        out["c_of_c"] = self.c_of_c(call=call)
+        # need to define entire greek dict as the base GreekFDM class
+        # generates the dict using the FDM method
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+            "CofC": self.c_of_c(call=call),
+        }
 
-        return out
+        return gk
 
     def volatility(
         self,
@@ -694,6 +704,8 @@ class MiltersenSchwartzOption(Option):
 
         # fmt: on
 
+        self._greeks = GreeksFDM(self)
+
     def call(self):
         """
         Returns the calculated price of a call option according to the
@@ -784,6 +796,10 @@ class MiltersenSchwartzOption(Option):
 
         return fd(self._FT) * 1
 
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
+
     def vega(self):
         """
         Method to return vega greek for either call or put options using Finite Difference Methods.
@@ -827,9 +843,6 @@ class MiltersenSchwartzOption(Option):
         }
 
         return gk
-
-    def rho(self):
-        print("rho not defined for this Option")
 
     def lamb(self, call: bool = True):
         """

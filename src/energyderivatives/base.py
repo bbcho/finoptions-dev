@@ -151,10 +151,13 @@ class GreeksFDM:
     """
 
     def __init__(self, opt):
-        if isinstance(opt, Option):
+
+        if True:  # issubclass(opt, Option):
             self._opt = opt
         else:
-            raise ValueError("Parameter opt is not of the Option class")
+            raise ValueError(
+                f"Parameter opt is not of the Option class, it is of the {type(opt)} class"
+            )
 
     def _make_partial_der(self, wrt, call, opt, **kwargs):
         """
@@ -250,7 +253,7 @@ class GreeksFDM:
 
     def lamb(self, call: bool = True):
         """
-        Method to return lambda greek for either call or put options.
+        Method to return lambda greek for either call or put options using Finite Difference Methods.
 
         Parameters
         ----------
@@ -269,7 +272,7 @@ class GreeksFDM:
 
     def gamma(self):
         """
-        Method to return gamma greek for either call or put options.
+        Method to return gamma greek for either call or put options using Finite Difference Methods.
 
         Parameters
         ----------
@@ -286,6 +289,17 @@ class GreeksFDM:
         return fd(self._opt._S) * 1
 
     def greeks(self, call: bool = True):
+        """
+        Method to return greeks as a dictiontary for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
         gk = {
             "delta": self.delta(call),
             "theta": self.theta(call),
@@ -328,8 +342,15 @@ class Option(Derivative):
     interest rate rf
     """
 
-    __name__ = "Option"
-    __title__ = "Base Option Class"
+    @property
+    @abstractmethod
+    def __name__(self):
+        pass
+
+    @property
+    @abstractmethod
+    def __title__(self):
+        pass
 
     def __init__(self, S: float, K: float, t: float, r: float, b: float, sigma: float):
         self._S = S
@@ -338,25 +359,6 @@ class Option(Derivative):
         self._r = r
         self._b = b
         self._sigma = sigma
-
-    def _make_partial_der(self, wrt, call, opt, **kwargs):
-        """
-        Create monad from Option methods call and put for use
-        in calculating the partial derivatives or greeks with
-        respect to wrt.
-        """
-
-        def _func(x):
-            tmp = opt.copy()
-            tmp.set_param(wrt, x)
-            if call == True:
-                return tmp.call()
-            else:
-                return tmp.put()
-
-        fd = _nd.Derivative(_func, **kwargs)
-
-        return fd
 
     def get_params(self):
         return {
@@ -389,12 +391,6 @@ class Option(Derivative):
 
         self.__init__(**tmp)
 
-    def put():
-        pass
-
-    def call():
-        pass
-
     @abstractmethod
     def delta(self):
         pass
@@ -405,10 +401,6 @@ class Option(Derivative):
 
     @abstractmethod
     def vega(self):
-        pass
-
-    @abstractmethod
-    def rho(self):
         pass
 
     @abstractmethod
