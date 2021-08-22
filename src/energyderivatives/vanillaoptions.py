@@ -27,14 +27,15 @@ class GBSOption(Option):
         Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
 
-    Note
-    ----
-    that setting:
-    b = r we get Black and Scholes’ stock option model
-    b = r-q we get Merton’s stock option model with continuous dividend yield q
-    b = 0 we get Black’s futures option model
-    b = r-rf we get Garman and Kohlhagen’s currency option model with foreign
-    interest rate rf
+    Notes
+    -----
+    Including a cost of carry term b, the model can
+    used to price European Options on:
+
+    b = r       stocks (Black and Scholes’ stock option model)
+    b = r - q   stocks and stock indexes paying a continuous dividend yield q (Merton’s stock option model)
+    b = 0       futures (Black’s futures option model)
+    b = r - rf  currency options with foreign interst rate rf (Garman and Kohlhagen’s currency option model)
 
     Returns
     -------

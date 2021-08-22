@@ -21,6 +21,17 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
     the evolution of the price converges weakly to a lognormal diffusion. Within this mode the European
     options value converges to the value given by the Black-Scholes formula.
 
+    Notes
+    -----
+    The model described here is a version of the CRR Binomial
+    Tree model. Including a cost of carry term b, the model can
+    used to price European and American Options on:
+
+    b = r       stocks
+    b = r - q   stocks and stock indexes paying a continuous dividend yield q
+    b = 0       futures
+    b = r - rf  currency options with foreign interst rate rf
+
     Parameters
     ----------
     S : float
