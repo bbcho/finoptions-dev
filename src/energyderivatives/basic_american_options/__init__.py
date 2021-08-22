@@ -1,10 +1,11 @@
-from ..base import Option as _Option
+from ..base import GreeksFDM, Option as _Option
 from ..vanillaoptions import GBSOption as _GBSOption
 import numpy as _np
 from scipy.optimize import root_scalar as _root_scalar
 import sys as _sys
 import warnings as _warnings
 import numdifftools as _nd
+from ..utils import docstring_from
 
 
 class RollGeskeWhaleyOption(_Option):
@@ -84,6 +85,8 @@ class RollGeskeWhaleyOption(_Option):
         # Settings:
         self._big = 100000000
         self._eps = 1.0e-5
+
+        self._greeks = GreeksFDM(self)
 
     def is_call_optimal(self):
         """
@@ -172,9 +175,6 @@ class RollGeskeWhaleyOption(_Option):
 
         return result
 
-    def put(self):
-        print("put option price not defined for RollGeskeWhaleyOption")
-
     def get_params(self):
         return {
             "S": self._S,
@@ -215,6 +215,104 @@ class RollGeskeWhaleyOption(_Option):
             print(out)
         else:
             return out
+
+    def delta(self):
+        """
+        Method to return delta greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.delta()
+
+    def theta(self):
+        """
+        Method to return theta greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.theta()
+
+    def vega(self):
+        """
+        Method to return vega greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.vega()
+
+    def rho(self):
+        """
+        Method to return rho greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.rho()
+
+    def lamb(self):
+        """
+        Method to return lamb greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.lamb()
+
+    def gamma(self):
+        """
+        Method to return delta greek for a call options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.gamma()
+
+    def greeks(self):
+        """
+        Method to return greeks as a dictiontary for a call option using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        return self._greeks.greeks()
 
     def volatility(
         self,
@@ -299,6 +397,8 @@ class BAWAmericanApproxOption(_Option):
             raise TypeError("Arrays not supported as arguments for this option class")
 
         super().__init__(S, K, t, r, b, sigma)
+
+        self._greeks = GreeksFDM(self)
 
     def _bawKc(self):
         # Newton Raphson algorithm to solve for the critical commodity
@@ -511,27 +611,54 @@ class BAWAmericanApproxOption(_Option):
 
         return result
 
+    @docstring_from(GreeksFDM.delta)
+    def delta(self, call: bool = True):
+        return self._greeks.delta(call=call)
+
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
+
+    @docstring_from(GreeksFDM.rho)
+    def rho(self, call: bool = True):
+        return self._greeks.rho(call=call)
+
+    @docstring_from(GreeksFDM.lamb)
+    def lamb(self, call: bool = True):
+        return self._greeks.lamb(call=call)
+
+    @docstring_from(GreeksFDM.gamma)
+    def gamma(self):
+        return self._greeks.gamma()
+
+    @docstring_from(GreeksFDM.greeks)
+    def greeks(self, call: bool = True):
+        # need to override so that the overridden vega is used
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+        }
+
+        return gk
+
+    @docstring_from(GreeksFDM.vega)
     def vega(self):
-        """
-        Method to return vega greek for either call or put options using Finite Difference Methods.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        float
-        """
         # same for both call and put options
         # over-rode parent class vega as it is unstable for larger step sizes of sigma.
-        fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
+        fd = self._greeks._make_partial_der(
+            "sigma", True, self, n=1, step=self._sigma / 10
+        )
         return float(fd(self._sigma))
 
 
 class BSAmericanApproxOption(_Option):
     """
-    BSAmericanApproxOption evaluates American calls or puts onstocks, futures, and currencies due to the approximation method of Bjerksund and Stensland (1993)
+    BSAmericanApproxOption evaluates American calls or puts on stocks, futures, and currencies
+    due to the approximation method of Bjerksund and Stensland (1993)
 
     Parameters
     ----------
@@ -564,7 +691,7 @@ class BSAmericanApproxOption(_Option):
     References
     ----------
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
-    [2] Bjerksund P., Stensland G. (1993);Closed Form Approximation of American Options, ScandinavianJournal of Management 9, 87–99
+    [2] Bjerksund P., Stensland G. (1993);Closed Form Approximation of American Options, Scandinavian Journal of Management 9, 87–99
     """
 
     __name__ = "BSAmericanApproxOption"
@@ -578,6 +705,10 @@ class BSAmericanApproxOption(_Option):
             raise TypeError("Arrays not supported as arguments for this option class")
 
         super().__init__(S, K, t, r, b, sigma)
+        self._greeks = GreeksFDM(self)
+
+        # override make_partial_der because call() and put() return dicts
+        self._greeks._make_partial_der = self._make_partial_der
 
     def _make_partial_der(self, wrt, call, opt, **kwargs):
         """
@@ -598,38 +729,47 @@ class BSAmericanApproxOption(_Option):
 
         return fd
 
+    @docstring_from(GreeksFDM.delta)
+    def delta(self, call: bool = True):
+        return self._greeks.delta(call=call)
+
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
+
+    @docstring_from(GreeksFDM.rho)
+    def rho(self, call: bool = True):
+        return self._greeks.rho(call=call)
+
+    @docstring_from(GreeksFDM.gamma)
+    def gamma(self):
+        return self._greeks.gamma()
+
+    @docstring_from(GreeksFDM.greeks)
+    def greeks(self, call: bool = True):
+        # need to override so that the overridden lamb is used
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+        }
+
+        return gk
+
+    @docstring_from(GreeksFDM.lamb)
     def lamb(self, call: bool = True):
-        """
-        Method to return lambda greek for either call or put options.
-
-        Parameters
-        ----------
-        call : bool
-            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
-
-        Returns
-        -------
-        float
-        """
         if call == True:
             price = self.call()["OptionPrice"]
         else:
             price = self.put()["OptionPrice"]
         return self.delta(call=call) * self._S / price
 
+    @docstring_from(GreeksFDM.vega)
     def vega(self):
-        """
-        Method to return vega greek for either call or put options using Finite Difference Methods.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        float
-        """
-        # same for both call and put options
+        # same for both call and put options, overriden as it needs smaller step sizes
         fd = self._make_partial_der("sigma", True, self, n=1, step=self._sigma / 10)
         return fd(self._sigma) * 1
 
