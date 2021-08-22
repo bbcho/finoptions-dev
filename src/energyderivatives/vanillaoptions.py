@@ -1,4 +1,4 @@
-from .base import Option
+from .base import GreeksFDM, Option
 import numpy as _np
 from scipy.optimize import root_scalar as _root_scalar
 from scipy.optimize import root as _root
@@ -72,6 +72,8 @@ class GBSOption(Option):
 
             self._d2 = self._d1 - self._sigma * _np.sqrt(self._t)
         # fmt: on
+
+        self._greeks = GreeksFDM(self)
 
     def _check_sigma(self, func):
         if self._sigma is None:
@@ -170,7 +172,7 @@ class GBSOption(Option):
                     self._CND(self._d1) - 1
                 )
         elif method == "fdm":
-            return super().delta(call=call)
+            return self._greeks.delta(call=call)
 
     def theta(self, call: bool = True, method: str = "analytic"):
         """
@@ -231,7 +233,7 @@ class GBSOption(Option):
                     * self._CND(-self._d2)
                 )
         elif method == "fdm":
-            return super().theta(call=call)
+            return self._greeks.theta(call=call)
 
     def vega(self, method: str = "analytic"):
         """
@@ -265,7 +267,7 @@ class GBSOption(Option):
                 * _np.sqrt(self._t)
             )
         elif method == "fdm":
-            return super().vega()
+            return self._greeks.vega()
 
     def rho(self, call: bool = True, method: str = "analytic"):
         """
@@ -321,8 +323,7 @@ class GBSOption(Option):
         elif method == "fdm":
             # This only works if the cost to carry b is zero....
             if self._b == 0:
-                fd = self._make_partial_der("r", call, self, n=1)
-                return float(fd(self._r))
+                return self._greeks.rho(call=call)
             else:
                 raise ValueError(
                     "rho calculation versus finite difference method currently only works if b = 0"
@@ -373,7 +374,7 @@ class GBSOption(Option):
 
             return result
         elif method == "fdm":
-            return super().lamb(call=call)
+            return self._greeks.lamb(call=call)
 
     def gamma(self, method: str = "analytic"):
         """
@@ -406,7 +407,7 @@ class GBSOption(Option):
                 / (self._S * self._sigma * _np.sqrt(self._t))
             )
         elif method == "fdm":
-            return super().gamma()
+            return self._greeks.gamma()
 
     def c_of_c(self, call: bool = True):
         """
@@ -473,7 +474,10 @@ class GBSOption(Option):
         """
         self._check_sigma("greeks")
 
-        return super().greeks(call=call)
+        out = self._greeks.greeks(call=call)
+        out["c_of_c"] = self.c_of_c(call=call)
+
+        return out
 
     def volatility(
         self,
@@ -506,34 +510,6 @@ class GBSOption(Option):
         Example
         -------
         """
-        # if self._sigma is not None:
-        #     _warnings.warn("sigma is not None but calculating implied volatility.")
-
-        # def _func(sigma):
-        #     temp = GBSOption(
-        #         S=self._S, K=self._K, t=self._t, r=self._r, b=self._b, sigma=sigma
-        #     )
-        #     if call == True:
-        #         return price - temp.call()
-        #     else:
-        #         return price - temp.put()
-
-        # # check to see if arrays were past vs scalars.
-        # if self._check_array(price, self._S, self._K, self._t, self._r, self._b):
-        #     # if arrays, use root function
-        #     a = self._max_array(price, self._S, self._K, self._t, self._r, self._b)
-        #     if verbose == True:
-        #         sol = _root(_func, x0=_np.ones_like(a))
-        #     else:
-        #         sol = _root(_func, x0=_np.ones_like(a)).x
-        # else:
-        #     # if scalars use root_scalar function
-        #     if verbose == True:
-        #         sol = _root_scalar(_func, bracket=[-10, 10], xtol=tol, maxiter=maxiter)
-        #     else:
-        #         sol = _root_scalar(
-        #             _func, bracket=[-10, 10], xtol=tol, maxiter=maxiter
-        #         ).root
 
         sol = self._volatility(price, call, tol, maxiter, verbose)
 

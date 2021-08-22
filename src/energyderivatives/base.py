@@ -140,8 +140,162 @@ class Derivative(_Base):
 
 
 class GreeksFDM:
+    """
+    Greek calculation class for composition of Option classes
+
+    Parameters
+    ----------
+    opt : Option class
+        Option class with Option values to calculate greeks from
+
+    """
+
     def __init__(self, opt):
-        self._opt = opt
+        if isinstance(opt, Option):
+            self._opt = opt
+        else:
+            raise ValueError("Parameter opt is not of the Option class")
+
+    def _make_partial_der(self, wrt, call, opt, **kwargs):
+        """
+        Create monad from Option methods call and put for use
+        in calculating the partial derivatives or greeks with
+        respect to wrt.
+        """
+
+        def _func(x):
+            tmp = opt.copy()
+            tmp.set_param(wrt, x)
+            if call == True:
+                return tmp.call()
+            else:
+                return tmp.put()
+
+        fd = _nd.Derivative(_func, **kwargs)
+
+        return fd
+
+    def delta(self, call: bool = True):
+        """
+        Method to return delta greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        call : bool
+            Returns delta greek for call option if True, else returns delta greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        fd = self._make_partial_der("S", call, self._opt, n=1)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._opt._S) * 1
+
+    def theta(self, call: bool = True):
+        """
+        Method to return theta greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        call : bool
+            Returns theta greek for call option if True, else returns theta greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        fd = self._make_partial_der("t", call, self._opt, n=1, step=1 / 252)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._opt._t) * -1
+
+    def vega(self):
+        """
+        Method to return vega greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        fd = self._make_partial_der("sigma", True, self._opt, n=1)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._opt._sigma) * 1
+
+    def rho(self, call: bool = True):
+        """
+        Method to return rho greek for either call or put options using Finite Difference Methods.
+
+        Parameters
+        ----------
+        call : bool
+            Returns rho greek for call option if True, else returns rho greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        # This only works if the cost to carry b is zero....
+        fd = self._make_partial_der("r", call, self._opt, n=1)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._opt._r) * 1
+
+    def lamb(self, call: bool = True):
+        """
+        Method to return lambda greek for either call or put options.
+
+        Parameters
+        ----------
+        call : bool
+            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
+
+        Returns
+        -------
+        float
+        """
+        if call == True:
+            price = self._opt.call()
+        else:
+            price = self._opt.put()
+        return self.delta(call=call) * self._opt._S / price
+
+    def gamma(self):
+        """
+        Method to return gamma greek for either call or put options.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        float
+        """
+        # same for both call and put options
+        fd = self._make_partial_der("S", True, self._opt, n=2)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return fd(self._opt._S) * 1
+
+    def greeks(self, call: bool = True):
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+        }
+
+        return gk
 
 
 class Option(Derivative):
@@ -241,143 +395,33 @@ class Option(Derivative):
     def call():
         pass
 
-    def delta(self, call: bool = True):
-        """
-        Method to return delta greek for either call or put options using Finite Difference Methods.
+    @abstractmethod
+    def delta(self):
+        pass
 
-        Parameters
-        ----------
-        call : bool
-            Returns delta greek for call option if True, else returns delta greek for put options. By default True.
+    @abstractmethod
+    def theta(self):
+        pass
 
-        Returns
-        -------
-        float
-        """
-        fd = self._make_partial_der("S", call, self, n=1)
-
-        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
-        return fd(self._S) * 1
-
-    def theta(self, call: bool = True):
-        """
-        Method to return theta greek for either call or put options using Finite Difference Methods.
-
-        Parameters
-        ----------
-        call : bool
-            Returns theta greek for call option if True, else returns theta greek for put options. By default True.
-
-        Returns
-        -------
-        float
-        """
-        fd = self._make_partial_der("t", call, self, n=1, step=1 / 252)
-
-        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
-        return fd(self._t) * -1
-
+    @abstractmethod
     def vega(self):
-        """
-        Method to return vega greek for either call or put options using Finite Difference Methods.
+        pass
 
-        Parameters
-        ----------
-        None
+    @abstractmethod
+    def rho(self):
+        pass
 
-        Returns
-        -------
-        float
-        """
-        # same for both call and put options
-        fd = self._make_partial_der("sigma", True, self, n=1)
+    @abstractmethod
+    def lamb(self):
+        pass
 
-        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
-        return fd(self._sigma) * 1
-
-    def rho(self, call: bool = True):
-        """
-        Method to return rho greek for either call or put options using Finite Difference Methods.
-
-        Parameters
-        ----------
-        call : bool
-            Returns rho greek for call option if True, else returns rho greek for put options. By default True.
-
-        Returns
-        -------
-        float
-        """
-        # This only works if the cost to carry b is zero....
-        fd = self._make_partial_der("r", call, self, n=1)
-
-        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
-        return fd(self._r) * 1
-
-    def lamb(self, call: bool = True):
-        """
-        Method to return lambda greek for either call or put options.
-
-        Parameters
-        ----------
-        call : bool
-            Returns lambda greek for call option if True, else returns lambda greek for put options. By default True.
-
-        Returns
-        -------
-        float
-        """
-        if call == True:
-            price = self.call()
-        else:
-            price = self.put()
-        return self.delta(call=call) * self._S / price
-
+    @abstractmethod
     def gamma(self):
-        """
-        Method to return gamma greek for either call or put options.
+        pass
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        float
-        """
-        # same for both call and put options
-        fd = self._make_partial_der("S", True, self, n=2)
-
-        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
-        return fd(self._S) * 1
-
-    def c_of_c(self, call: bool = True):
-        """
-        Method to return C of C greek for either call or put options.
-
-        Parameters
-        ----------
-        call : bool
-            Returns C of C greek for call option if True, else returns C of C greek for put options. By default True.
-
-        Returns
-        -------
-        float
-        """
-        return None
-
-    def greeks(self, call: bool = True):
-        gk = {
-            "delta": self.delta(call),
-            "theta": self.theta(call),
-            "vega": self.vega(),
-            "rho": self.rho(call),
-            "lambda": self.lamb(call),
-            "gamma": self.gamma(),
-            "CofC": self.c_of_c(call),
-        }
-
-        return gk
+    @abstractmethod
+    def greeks(self):
+        pass
 
     def summary(self, printer=True):
         """
