@@ -139,6 +139,11 @@ class Derivative(_Base):
         return _copy.deepcopy(self)
 
 
+class GreeksFDM:
+    def __init__(self, opt):
+        self._opt = opt
+
+
 class Option(Derivative):
     """
     Base class for options
