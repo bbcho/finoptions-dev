@@ -72,8 +72,18 @@ BAWAmPutApproxOptiontest <- function(S, X, Time, r, b, sigma)
 BAWAmPutApproxOptiontest( S = 100,X = 100, Time = 0.5, r = 0.10, b = 0, sigma = 0.25)
 
 CRRBinomialTreeOption(TypeFlag = "ce", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
-CRRBinomialTreeOption(TypeFlag = "ca", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 CRRBinomialTreeOption(TypeFlag = "pe", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+CRRBinomialTreeOption(TypeFlag = "ca", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 CRRBinomialTreeOption(TypeFlag = "pa", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 
+
+JRBinomialTreeOption(TypeFlag = "ce", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+JRBinomialTreeOption(TypeFlag = "pe", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+JRBinomialTreeOption(TypeFlag = "ca", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+JRBinomialTreeOption(TypeFlag = "pa", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+
+TIANBinomialTreeOption(TypeFlag = "ce", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+TIANBinomialTreeOption(TypeFlag = "pe", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+TIANBinomialTreeOption(TypeFlag = "ca", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
+TIANBinomialTreeOption(TypeFlag = "pa", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 
