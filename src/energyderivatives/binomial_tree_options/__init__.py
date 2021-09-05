@@ -6,14 +6,49 @@ import sys as _sys
 import warnings as _warnings
 import numdifftools as _nd
 from ..utils import docstring_from
+from matplotlib import pyplot as _plt
 
 
-class BiTreeOption:
-    def plot(self):
-        pass
+class BiTreePlotter:
+    def __init__(self, tree):
+        self._tree = tree
+
+    def plot(self, dx=-0.025, dy=0.4, size=12, digits=2, **kwargs):
+        depth = self._tree.shape[1] - 1
+
+        fig = _plt.figure(**kwargs)
+        for i in range(depth):
+            x = [1, 0, 1]
+            for j in range(i):
+                x.append(0)
+                x.append(1)
+            x = _np.array(x) + i
+            y = _np.arange(-(i + 1), i + 2)[::-1]
+            _plt.plot(x, y, "bo-")
+
+            pts = list(zip(x, y))
+
+            for p in pts:
+                value = round(self._tree[self._convert_to_index(p)][p[0]], digits)
+                _plt.annotate(value, xy=p, xytext=(p[0] + dx, p[1] + dy), fontsize=size)
+
+        _plt.xlabel("n", fontsize=size)
+        _plt.ylabel("Option Value", fontsize=size)
+        _plt.title("Option Tree", fontsize=int(size * 1.3))
+        return fig
+
+    def _convert_to_index(self, p):
+        # converts tree y values into indices for the tree matrix
+        step = -2
+        max = p[0]
+        if max > 0:
+            a = _np.arange(max, -max + step, step)
+            return int(_np.where(a == p[1])[0])
+        else:
+            return 0
 
 
-class CRRBinomialTreeOption(_Option, BiTreeOption):
+class CRRBinomialTreeOption(_Option):
     """
     Binomial models were first suggested by Cox, Ross and Rubinstein (1979), CRR,
     and then became widely used because of its intuition and easy implementation. Binomial trees are
@@ -103,14 +138,20 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
             "n": self._n,
         }
 
-    def call(self):
+    def call(self, tree: bool = False):
         """
         Returns the calculated price of a call option according to the
         Cox-Ross-Rubinstein Binomial Tree option price model.
 
+        Parameters
+        ----------
+        tree : bool
+            If True, returns the bionomial option as a tree-matrix to show the evolution of the option
+            value.
+
         Returns
         -------
-        float
+        float or tree-matrix
 
         Example
         -------
@@ -124,16 +165,22 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         """
 
         z = 1
-        return self._calc_price(z, self._n, self._type)
+        return self._calc_price(z, self._n, self._type, tree)
 
-    def put(self):
+    def put(self, tree: bool = False):
         """
         Returns the calculated price of a put option according to the
         Cox-Ross-Rubinstein Binomial Tree option price model.
 
+        Parameters
+        ----------
+        tree : bool
+            If True, returns the bionomial option as a tree-matrix to show the evolution of the option
+            value.
+
         Returns
         -------
-        float
+        float or tree-matrix
 
         Example
         -------
@@ -147,7 +194,7 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
         """
 
         z = -1
-        return self._calc_price(z, self._n, self._type)
+        return self._calc_price(z, self._n, self._type, tree)
 
     def summary(self, printer=True):
         """
@@ -210,50 +257,96 @@ class CRRBinomialTreeOption(_Option, BiTreeOption):
     def greeks(self, call: bool = True):
         return self._greeks.greeks(call=call)
 
-    def _calc_price(self, z, n, type):
+    # fmt: off
+    def _calc_price(self, z, n, type, tree):
         dt = self._t / n
         u = _np.exp(self._sigma * _np.sqrt(dt))
         d = 1 / u
         p = (_np.exp(self._b * dt) - d) / (u - d)
         Df = _np.exp(-self._r * dt)
 
-        OptionValue = z * (
-            self._S * u ** _np.arange(0, n + 1) * d ** _np.arange(n, -1, -1) - self._K
-        )
+        OptionValue = z * (self._S * u ** _np.arange(0, n + 1) * d ** _np.arange(n, -1, -1) - self._K)
         OptionValue = (_np.abs(OptionValue) + OptionValue) / 2
 
         if type == "european":
-            return self._euro(OptionValue, n, Df, p)[0]
+            out = self._euro(OptionValue, n, Df, p, tree)
         elif type == "american":
-            return self._amer(
-                OptionValue,
-                n,
-                Df,
-                p,
-                self._K,
-                d,
-                self._S,
-                u,
-                z,
-            )[0]
+            out = self._amer(OptionValue, n, Df, p, self._K, d, self._S, u, z, tree)
 
-    def _euro(self, OptionValue, n, Df, p):
+        if tree == False:
+            return out[0]
+        else:
+            return out
+
+    def _euro(self, OptionValue, n, Df, p, tree=False):
+        tr = OptionValue.copy()
         for j in _np.arange(0, n)[::-1]:
+            tr = _np.append(tr, _np.zeros(n-j))
             for i in _np.arange(0, j + 1):
-                OptionValue[i] = (
-                    p * OptionValue[i + 1] + (1 - p) * OptionValue[i]
-                ) * Df
+                OptionValue[i] = (p * OptionValue[i + 1] + (1 - p) * OptionValue[i]) * Df
+                tr = _np.append(tr, OptionValue[i])
 
-        return OptionValue
+        if tree == True:
+            tr = _np.reshape(tr[::-1],(n+1,n+1)).T
+            return tr
+        else:
+            return OptionValue
 
-    def _amer(self, OptionValue, n, Df, p, K, d, S, u, z):
+    def _amer(self, OptionValue, n, Df, p, K, d, S, u, z, tree=False):
+        tr = OptionValue.copy()
         for j in _np.arange(0, n)[::-1]:
+            tr = _np.append(tr, _np.zeros(n-j))
             for i in _np.arange(0, j + 1):
                 OptionValue[i] = max(
                     (z * (S * u ** i * d ** (abs(i - j)) - K)),
                     (p * OptionValue[i + 1] + (1 - p) * OptionValue[i]) * Df,
                 )
-        return OptionValue
+                tr = _np.append(tr, OptionValue[i])
+        if tree == True:
+            tr = _np.reshape(tr[::-1],(n+1,n+1)).T
+            return tr
+        else:
+            return OptionValue
+    # fmt: on
+
+    def plot(self, call=True, dx=-0.025, dy=0.4, size=12, digits=2, **kwargs):
+        """
+        Method to plot the binomial tree values
+
+        Parameters
+        ----------
+        call : bool
+            Set to True to plot a call option. Otherwise set to False for a put option. By default True.
+        dx : float
+            x-offset for the node values in the same units at the call or put option value.
+        dy : float
+            y-offset for the node values in the same units at the call or put option value.
+        size : float
+            Font size for node and axis labels. By default 12. Title is 30% larger.
+        digits : int
+            Number of significant figures to show for option values. By default 2.
+        **kwargs
+            paramters to pass to matplotlib
+
+        Returns
+        -------
+        matplotlib figure object
+
+        Example
+        -------
+        >>> import energyderivatives as ed
+        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='american')
+        >>> opt.plot(call=False, figsize=(10,10))
+        """
+
+        if call == True:
+            tree = self.call(tree=True)
+        else:
+            tree = self.put(tree=True)
+
+        plotter = BiTreePlotter(tree)
+
+        return plotter.plot(dx, dy, size, digits, **kwargs)
 
 
 class JRBinomialTreeOption(CRRBinomialTreeOption):
@@ -301,7 +394,7 @@ class JRBinomialTreeOption(CRRBinomialTreeOption):
     __name__ = "JRBinomialTreeOption"
     __title__ = "JR Binomial Tree Model"
 
-    def _calc_price(self, z, n, type):
+    def _calc_price(self, z, n, type, tree=False):
         dt = self._t / n
         u = _np.exp((self._b - self._sigma ** 2 / 2) * dt + self._sigma * _np.sqrt(dt))
         d = _np.exp((self._b - self._sigma ** 2 / 2) * dt - self._sigma * _np.sqrt(dt))
@@ -314,19 +407,14 @@ class JRBinomialTreeOption(CRRBinomialTreeOption):
         OptionValue = (_np.abs(OptionValue) + OptionValue) / 2
 
         if type == "european":
-            return self._euro(OptionValue, n, Df, p)[0]
+            out = self._euro(OptionValue, n, Df, p, tree)
         elif type == "american":
-            return self._amer(
-                OptionValue,
-                n,
-                Df,
-                p,
-                self._K,
-                d,
-                self._S,
-                u,
-                z,
-            )[0]
+            out = self._amer(OptionValue, n, Df, p, self._K, d, self._S, u, z, tree)
+
+        if tree == False:
+            return out[0]
+        else:
+            return out
 
 
 class TIANBinomialTreeOption(CRRBinomialTreeOption):
@@ -369,7 +457,7 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
     """
 
-    def _calc_price(self, z, n, type):
+    def _calc_price(self, z, n, type, tree=False):
         dt = self._t / n
         M = _np.exp(self._b * dt)
         V = _np.exp(self._sigma ** 2 * dt)
@@ -384,20 +472,11 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
         OptionValue = (_np.abs(OptionValue) + OptionValue) / 2
 
         if type == "european":
-            return self._euro(OptionValue, n, Df, p)[0]
+            out = self._euro(OptionValue, n, Df, p, tree)
         elif type == "american":
-            return self._amer(
-                OptionValue,
-                n,
-                Df,
-                p,
-                self._K,
-                d,
-                self._S,
-                u,
-                z,
-            )[0]
+            out = self._amer(OptionValue, n, Df, p, self._K, d, self._S, u, z, tree)
 
-
-class BinomialTreeOption(_Option, BiTreeOption):
-    pass
+        if tree == False:
+            return out[0]
+        else:
+            return out
