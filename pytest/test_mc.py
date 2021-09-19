@@ -48,6 +48,7 @@ def test_monte_carlo():
         # eps=eps,
         trace=False,
         antithetic=True,
+        standardization=False,
     )
 
     opt = ed.GBSOption(S, K, t, r, b, sigma)
@@ -58,6 +59,34 @@ def test_monte_carlo():
     assert _np.allclose(
         opt.put(), _np.mean(mc.put()), rtol=1e-3
     ), "Monte Carlo Plain Vanilla put failed"
+
+    # test standardization - seems to produce worse results for Plain Vanilla
+    mc = ed.monte_carlo_options.MonteCarloOption(
+        mc_loops,
+        path_length,
+        mc_samples,
+        dt,
+        S,
+        K,
+        t,
+        r,
+        b,
+        sigma,
+        inno,
+        path,
+        payoff,
+        # eps=eps,
+        trace=False,
+        antithetic=True,
+        standardization=True,
+    )
+
+    assert _np.allclose(
+        opt.call(), _np.mean(mc.call()), rtol=1e-2
+    ), "Monte Carlo Plain Vanilla call with standardization failed"
+    assert _np.allclose(
+        opt.put(), _np.mean(mc.put()), rtol=1e-2
+    ), "Monte Carlo Plain Vanilla put with standardization failed"
 
 
 if __name__ == "__main__":

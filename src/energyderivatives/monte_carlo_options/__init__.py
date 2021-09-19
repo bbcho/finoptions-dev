@@ -15,6 +15,11 @@ class MonteCarloOption:  # _Option
 
     Parameters
     ----------
+    mc_samples : int
+    mc_loops : int
+    path_length : int
+    dt : float
+
     S : float
         Level or index price.
     K : float
@@ -28,6 +33,15 @@ class MonteCarloOption:  # _Option
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
+
+    Innovation : Innovation subclass
+    Path : Path subclass
+    Payoff : Payoff sublass
+    trace : bool
+    antithetic : bool
+    standardization : bool
+    eps=None,
+
 
     Notes
     -----
@@ -174,9 +188,10 @@ class MonteCarloOption:  # _Option
             if self._antithetic:
                 eps = _np.concatenate((eps, -eps))
             #     # Standardize Variates if requested:
-            #     if self._standardization:
-            #         pass
-            #         # eps = (eps-mean(eps))/sqrt(var(as.vector(eps)))
+            if self._standardization:
+                eps = (eps - _np.mean(eps)) / _np.std(eps)
+
+                # eps = (eps-mean(eps))/sqrt(var(as.vector(eps)))
 
             # Calculate for each path the option price:
             path = self._Path(eps, self._sigma, self._dt, self._b)
