@@ -87,3 +87,11 @@ TIANBinomialTreeOption(TypeFlag = "pe", S = 50, X = 40,Time = 5/12, r = 0.1, b =
 TIANBinomialTreeOption(TypeFlag = "ca", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 TIANBinomialTreeOption(TypeFlag = "pa", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5)
 
+print(BinomialTreeOption(TypeFlag = "ce", S = 50, X = 40,Time = 5/12, r = 0.1, b = 0.1, sigma = 0.4, n = 5))
+
+CRRTree = BinomialTreeOption(TypeFlag = "ce", S = 50, X = 50,
+                             Time = 0.4167, r = 0.1, b = 0.1, sigma = 0.4, n = 8)
+BinomialTreePlot(CRRTree, dy = 1, cex = 0.8, ylim = c(-6, 7),
+                 xlab = "n", ylab = "Option Value")
+title(main = "Option Tree")
+CRRTree
