@@ -20,7 +20,7 @@ def test_monte_carlo():
     dt = 1 / 360
 
     path_length = 30
-    mc_samples = 50000
+    mc_samples = 5000
     mc_loops = 500
 
     eps = _np.genfromtxt(
@@ -52,8 +52,12 @@ def test_monte_carlo():
 
     opt = ed.GBSOption(S, K, t, r, b, sigma)
 
-    print(opt.call())
-    print(_np.mean(mc.call()))
+    assert _np.allclose(
+        opt.call(), _np.mean(mc.call()), rtol=1e-3
+    ), "Monte Carlo Plain Vanilla call failed"
+    assert _np.allclose(
+        opt.put(), _np.mean(mc.put()), rtol=1e-3
+    ), "Monte Carlo Plain Vanilla put failed"
 
 
 if __name__ == "__main__":
