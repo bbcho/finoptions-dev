@@ -79,7 +79,7 @@ class MonteCarloOption:  # _Option
         mc_loops: int,
         path_length: int,
         mc_samples: int,
-        dt: float,
+        # dt: float,
         S: float,
         K: float,
         t: float,
@@ -99,7 +99,7 @@ class MonteCarloOption:  # _Option
         self._mc_loops = mc_loops
         self._path_length = path_length
         self._mc_samples = mc_samples
-        self._dt = dt
+        self._dt = t / path_length
         self._S = S
         self._K = K
         self._t = t
