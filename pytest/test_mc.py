@@ -17,14 +17,12 @@ def test_monte_carlo():
     r = 0.10
     b = 0.1
 
-    dt = 1 / 360
-
     path_length = 30
     mc_samples = 5000
-    mc_loops = 500
+    mc_loops = 50
 
     eps = _np.genfromtxt(
-        "./pytest/sobol_path_test.csv", delimiter=","
+        "./pytest/sobol_scrambled_path_test.csv", delimiter=","
     )  # load sobol paths from R since python version is slighly different in third path
 
     inno = ed.monte_carlo_options.NormalSobolInnovations
@@ -35,7 +33,6 @@ def test_monte_carlo():
         mc_loops,
         path_length,
         mc_samples,
-        # dt,
         S,
         K,
         t,

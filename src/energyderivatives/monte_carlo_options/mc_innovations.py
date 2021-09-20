@@ -4,26 +4,10 @@ import numpy as _np
 
 
 class Innovations(ABC):
-    def __init__(self, mc_samples, path_length, eps=None):
-        self.mc_samples = mc_samples
+    def __init__(self, mc_paths, path_length, eps=None):
+        self.mc_paths = mc_paths
         self.path_length = path_length
         self._eps = eps  # for testing only
-
-    @property
-    def mc_samples(self):
-        return self.__mc_samples
-
-    @mc_samples.setter
-    def mc_samples(self, val):
-        self.__mc_samples = val
-
-    @property
-    def path_length(self):
-        return self.__path_length
-
-    @path_length.setter
-    def path_length(self, val):
-        self.__path_length = val
 
     @abstractmethod
     def sample_innovation(self, init=False):
@@ -36,8 +20,8 @@ class NormalSobolInnovations(Innovations):
 
     Parameters
     ----------
-    mc_samples : int
-        Number of monte carlo samples per loop - total number of samples is mc_samples * mc_loops
+    mc_paths : int
+        Number of monte carlo samples per loop - total number of samples is mc_paths * mc_loops
     path_length : int
         Path length should be a power of 2 (i.e. 2**m) to generate stable paths. See
         statsmodels.stats.qmc.Sobol for more details.
@@ -62,14 +46,14 @@ class NormalSobolInnovations(Innovations):
             return self._eps
 
     def _get_sobol(self, scramble):
-        sobol = _qmc.Sobol(self.path_length, scramble=scramble).random(self.mc_samples)
+        sobol = _qmc.Sobol(self.path_length, scramble=scramble).random(self.mc_paths)
         if scramble == False:
             # add new sample since if not scrambled first row is zero which leads to -inf when normalized
             sobol = sobol[1:]
             sobol = _np.append(
                 sobol,
                 _qmc.Sobol(self.path_length, scramble=scramble)
-                .fast_forward(self.mc_samples)
+                .fast_forward(self.mc_paths)
                 .random(1),
                 axis=0,
             )
