@@ -127,7 +127,7 @@ class MonteCarloOption:  # _Option
     >>> import energyderivatives as ed
     >>> from scipy.stats import qmc, norm
     >>> import numpy as np
-    >>> from energyderivations.monte_carlo_options import Innovations, Path, Payoff
+    >>> from energyderivatives.monte_carlo_options import Innovations, Path, Payoff
     >>> S = 100
     >>> K = 100
     >>> t = 1 / 12
@@ -158,11 +158,11 @@ class MonteCarloOption:  # _Option
 
     >>> class PlainVanillaPayoff(Payoff):
             def call(self):
-                St = self.S * _np.exp(_np.sum(self.path.generate_path(), axis=1))
+                St = self.S * np.exp(np.sum(self.path.generate_path(), axis=1))
                 return np.exp(-self.r * self.t) * np.maximum(St - self.K, 0)
 
             def put(self):
-                St = self.S * _np.exp(_np.sum(self.path.generate_path(), axis=1))
+                St = self.S * np.exp(np.sum(self.path.generate_path(), axis=1))
                 return np.exp(-self.r * self.t) * np.maximum(self.K - St, 0)
 
     >>> opt = ed.monte_carlo_options.MonteCarloOption(
@@ -171,8 +171,8 @@ class MonteCarloOption:  # _Option
             NormalSobolInnovations, WienerPath, PlainVanillaPayoff,
             trace=False, antithetic=True, standardization=False
         )
-    >>> opt.call()
-    >>> opt.put()
+    >>> print(opt.call().mean())
+    >>> print(opt.put().mean())
     >>> opt.greeks(call=True) # not working yet
 
     References
