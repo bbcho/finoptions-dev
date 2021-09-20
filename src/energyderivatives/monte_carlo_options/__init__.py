@@ -7,6 +7,7 @@ from .mc_paths import *
 from .mc_payoffs import *
 
 import numpy as _np
+import warnings as _warnings
 
 
 class MonteCarloOption:  # _Option
@@ -247,7 +248,11 @@ class MonteCarloOption:  # _Option
         ----------
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
-        return self._sim_mc(call=True)
+        iteration = self._sim_mc(call=True)
+        if self._trace:
+            self._print_trace(iteration)
+
+        return iteration
 
     def put(self):
         """
@@ -272,17 +277,28 @@ class MonteCarloOption:  # _Option
         ----------
         [1] Haug E.G., The Complete Guide to Option Pricing Formulas
         """
+        iteration = self._sim_mc(call=False)
+        if self._trace:
+            self._print_trace(iteration)
 
-        return self._sim_mc(call=False)
+        return iteration
+
+    def _print_trace(self, iteration):
+        print("\nMonte Carlo Simulation Path:\n\n")
+        print("\nLoop:\t", "No\t")
+
+        for i, _ in enumerate(iteration):
+            print(
+                "\nLoop:\t",
+                i,
+                "\t:",
+                iteration[i],
+                _np.sum(iteration) / (i + 1),
+                end="",
+            )
+        print("\n")
 
     def _sim_mc(self, call=True):
-
-        dt = self._dt
-        trace = self._trace
-
-        if trace:
-            print("\nMonte Carlo Simulation Path:\n\n")
-            print("\nLoop:\t", "No\t")
 
         iteration = _np.zeros(self._mc_loops)
 
@@ -322,22 +338,9 @@ class MonteCarloOption:  # _Option
             tmp = _np.mean(payoff)
 
             if tmp == _np.inf:
-                import warnings
-
-                warnings.warn(f"Warning: mc_loop {i} returned Inf.")
+                _warnings.warn(f"Warning: mc_loop {i} returned Inf.")
                 return (eps, path, payoff)
 
             iteration[i] = tmp
-
-            if trace:
-                print(
-                    "\nLoop:\t",
-                    i,
-                    "\t:",
-                    iteration[i],
-                    _np.sum(iteration) / (i + 1),
-                    end="",
-                )
-        print("\n")
 
         return iteration
