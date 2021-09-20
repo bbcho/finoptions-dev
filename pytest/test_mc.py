@@ -51,10 +51,10 @@ def test_monte_carlo():
     opt = ed.GBSOption(S, K, t, r, b, sigma)
 
     assert _np.allclose(
-        opt.call(), _np.mean(mc.call()), rtol=1e-3
+        opt.call(), _np.mean(mc.call()), rtol=1e-2
     ), "Monte Carlo Plain Vanilla call failed"
     assert _np.allclose(
-        opt.put(), _np.mean(mc.put()), rtol=1e-3
+        opt.put(), _np.mean(mc.put()), rtol=1e-2
     ), "Monte Carlo Plain Vanilla put failed"
 
     # test standardization - seems to produce worse results for Plain Vanilla
