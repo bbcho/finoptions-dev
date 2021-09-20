@@ -144,7 +144,7 @@ class MonteCarloOption:  # _Option
                 if scramble == False:
                     # add new sample since if not scrambled first row is zero which leads to -inf when normalized
                     sobol = sobol[1:]
-                    sobol = _np.append(
+                    sobol = np.append(
                         sobol,
                         qmc.Sobol(self.path_length, scramble=scramble).fast_forward(self.mc_paths).random(1),
                         axis=0,
