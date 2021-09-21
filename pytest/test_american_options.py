@@ -5,11 +5,11 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_RollGeskeWhaleyOption():
-    opt = ed.basic_american_options.RollGeskeWhaleyOption(
+    opt = fo.basic_american_options.RollGeskeWhaleyOption(
         S=80, K=82, t=1 / 3, td=1 / 4, r=0.06, D=4, sigma=0.30
     )
 
@@ -19,7 +19,7 @@ def test_RollGeskeWhaleyOption():
 
 
 def test_BAWAmericanApproxOption():
-    opt = ed.basic_american_options.BAWAmericanApproxOption(
+    opt = fo.basic_american_options.BAWAmericanApproxOption(
         S=100, K=90, t=0.5, r=0.10, b=0, sigma=0.25
     )
 
@@ -34,7 +34,7 @@ def test_BAWAmericanApproxOption():
 
 def test_BSAmericanApproxOption():
 
-    opt = ed.basic_american_options.BSAmericanApproxOption(
+    opt = fo.basic_american_options.BSAmericanApproxOption(
         S=100, K=90, t=0.5, r=0.10, b=0, sigma=0.25
     )
 

@@ -5,13 +5,13 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 # def test_Option():
-#     b = ed.Option(0, 0, 0, 0, 0, 0)
+#     b = fo.Option(0, 0, 0, 0, 0, 0)
 
-#     assert isinstance(b, ed.Option), "Option object failed init"
+#     assert isinstance(b, fo.Option), "Option object failed init"
 
 #     assert isinstance(
 #         b.get_params(), dict
@@ -20,7 +20,7 @@ import energyderivatives as ed
 
 def test_GBSOption():
 
-    opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
 
     assert (
         round(opt.call(), 6) == 2.061847
@@ -68,7 +68,7 @@ def test_GBSOption():
             ), f"GBSOption {cp} calculation for a {type} option does not match fOptions. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1) should result in {cp} of {control_val}"
 
     # test implied volatility method
-    vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
+    vol = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
     assert (
         round(vol.volatility(2.5, call=True), 6) == 0.342241
     ), "GBSOption implied volatility calculation does not match fOptions for a call option. GBSOption(10.0, 8.0, 1.0, 0.02, 0.01).volatility(3) should equal 0.342241"
@@ -83,7 +83,7 @@ def test_GBSOption():
 
 def test_BlackScholesOption():
 
-    opt = ed.BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    opt = fo.BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
 
     assert (
         round(opt.call(), 6) == 2.061847
@@ -92,7 +92,7 @@ def test_BlackScholesOption():
 
 def test_Black76sOption():
 
-    opt = ed.Black76Option(10.0, 8.0, 1.0, 0.02, 0.1)
+    opt = fo.Black76Option(10.0, 8.0, 1.0, 0.02, 0.1)
 
     assert (
         round(opt.call(), 6) == 1.96431
@@ -100,7 +100,7 @@ def test_Black76sOption():
 
 
 def test_MiltersenSchwartzOption():
-    opt = ed.MiltersenSchwartzOption(
+    opt = fo.MiltersenSchwartzOption(
         Pt=np.exp(-0.05 / 4),
         FT=95,
         K=80,
@@ -134,7 +134,7 @@ def test_MiltersenSchwartzOption():
 
 
 def test_FDM_greeks():
-    opt = ed.GBSOption(10.0, 8.0, 1, 0.02, 0.0, 0.1)
+    opt = fo.GBSOption(10.0, 8.0, 1, 0.02, 0.0, 0.1)
     greeks = ["delta", "theta", "gamma", "lamb", "vega", "rho"]
 
     for g in greeks:

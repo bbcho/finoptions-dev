@@ -4,16 +4,16 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_vanilla_array():
     #fmt: off
     opt_test = [
-        (ed, "GBSOption", {"S": 10.0, "t": 1.0, "r": 0.02, "b": 0.01, "sigma": 0.2}, {'vol':True}),
-        (ed, "BlackScholesOption", {"S": 10.0, "t": 1.0, "r": 0.02, "b": 0.01, "sigma": 0.2}, {'vol':True}),
-        (ed, "Black76Option", {"FT": 10.0, "t": 1.0, "r": 0.02, "sigma": 0.2}, {'vol':True}),
-        (ed, "MiltersenSchwartzOption", dict(Pt=np.exp(-0.05 / 4), FT=10, t=1 / 4, T=1 / 2, sigmaS=0.2660, sigmaE=0.2490, sigmaF=0.0096, 
+        (fo, "GBSOption", {"S": 10.0, "t": 1.0, "r": 0.02, "b": 0.01, "sigma": 0.2}, {'vol':True}),
+        (fo, "BlackScholesOption", {"S": 10.0, "t": 1.0, "r": 0.02, "b": 0.01, "sigma": 0.2}, {'vol':True}),
+        (fo, "Black76Option", {"FT": 10.0, "t": 1.0, "r": 0.02, "sigma": 0.2}, {'vol':True}),
+        (fo, "MiltersenSchwartzOption", dict(Pt=np.exp(-0.05 / 4), FT=10, t=1 / 4, T=1 / 2, sigmaS=0.2660, sigmaE=0.2490, sigmaF=0.0096, 
                     rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045,KappaF=0.200), {'vol':False})
     ]
 
@@ -56,4 +56,4 @@ def test_vanilla_array():
 
 
 if __name__ == "__main__":
-    test_vanilla()
+    test_vanilla_array()

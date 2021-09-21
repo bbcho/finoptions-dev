@@ -5,7 +5,7 @@ import numpy as _np
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_monte_carlo():
@@ -25,11 +25,11 @@ def test_monte_carlo():
         "./pytest/sobol_scrambled_path_test.csv", delimiter=","
     )  # load sobol paths from R since python version is slighly different in third path
 
-    inno = ed.monte_carlo_options.NormalSobolInnovations
-    path = ed.monte_carlo_options.WienerPath
-    payoff = ed.monte_carlo_options.PlainVanillaPayoff
+    inno = fo.monte_carlo_options.NormalSobolInnovations
+    path = fo.monte_carlo_options.WienerPath
+    payoff = fo.monte_carlo_options.PlainVanillaPayoff
 
-    mc = ed.monte_carlo_options.MonteCarloOption(
+    mc = fo.monte_carlo_options.MonteCarloOption(
         mc_loops,
         path_length,
         mc_samples,
@@ -48,7 +48,7 @@ def test_monte_carlo():
         standardization=False,
     )
 
-    opt = ed.GBSOption(S, K, t, r, b, sigma)
+    opt = fo.GBSOption(S, K, t, r, b, sigma)
 
     assert _np.allclose(
         opt.call(), _np.mean(mc.call()), rtol=1e-2
@@ -58,7 +58,7 @@ def test_monte_carlo():
     ), "Monte Carlo Plain Vanilla put failed"
 
     # test standardization - seems to produce worse results for Plain Vanilla
-    mc = ed.monte_carlo_options.MonteCarloOption(
+    mc = fo.monte_carlo_options.MonteCarloOption(
         mc_loops,
         path_length,
         mc_samples,

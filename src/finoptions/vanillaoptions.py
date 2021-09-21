@@ -43,8 +43,8 @@ class GBSOption(Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> import finoptions as fo
+    >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
     >>> opt.call()
     >>> opt.put()
     >>> opt.greeks(call=True)
@@ -92,8 +92,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.call()
 
         References
@@ -121,8 +121,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.put()
 
         References
@@ -156,8 +156,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.delta(call=True)
 
         References
@@ -193,8 +193,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.theta(call=True)
 
         References
@@ -251,8 +251,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.vega()
 
         References
@@ -288,8 +288,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.rho(call=True)
 
         References
@@ -346,8 +346,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.lambda(call=True)
 
         References
@@ -392,8 +392,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.gamma(call=True)
 
         References
@@ -426,8 +426,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.c_of_c(call=True)
 
         References
@@ -466,8 +466,8 @@ class GBSOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.greeks(call=True)
 
         References
@@ -718,9 +718,9 @@ class MiltersenSchwartzOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
+        >>> import finoptions as fo
         >>> import numpy as np
-        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
+        >>> opt = fo.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
                     sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
         >>> opt.call()
 
@@ -746,9 +746,9 @@ class MiltersenSchwartzOption(Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
+        >>> import finoptions as fo
         >>> import numpy as np
-        >>> opt = ed.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
+        >>> opt = fo.MiltersenSchwartzOption(Pt=np.exp(-0.05/4), FT=95, K=80, t=1/4, T=1/2, sigmaS=0.2660,
                     sigmaE=0.2490, sigmaF=0.0096, rhoSE=0.805, rhoSF=0.0805, rhoEF=0.1243, KappaE=1.045, KappaF=0.200)
         >>> opt.put()
 
@@ -793,7 +793,7 @@ class MiltersenSchwartzOption(Option):
         -------
         float
         """
-        fd = self._make_partial_der("FT", call, self, n=1)
+        fd = self._greeks._make_partial_der("FT", call, self, n=1)
 
         return fd(self._FT) * 1
 
@@ -814,9 +814,9 @@ class MiltersenSchwartzOption(Option):
         float
         """
         # same for both call and put options
-        fdS = self._make_partial_der("sigmaS", True, self, n=1)
-        fdE = self._make_partial_der("sigmaE", True, self, n=1)
-        fdF = self._make_partial_der("sigmaF", True, self, n=1)
+        fdS = self._greeks._make_partial_der("sigmaS", True, self, n=1)
+        fdE = self._greeks._make_partial_der("sigmaE", True, self, n=1)
+        fdF = self._greeks._make_partial_der("sigmaF", True, self, n=1)
         result = _np.array(
             (
                 fdS(self._sigmaS) * 1,
@@ -840,7 +840,7 @@ class MiltersenSchwartzOption(Option):
             "vega": self.vega(),
             "lambda": self.lamb(call),
             "gamma": self.gamma(),
-            "CofC": self.c_of_c(call),
+            # "CofC": self.c_of_c(call),
         }
 
         return gk
@@ -877,5 +877,5 @@ class MiltersenSchwartzOption(Option):
         float
         """
         # same for both call and put options
-        fd = self._make_partial_der("FT", True, self, n=2)
+        fd = self._greeks._make_partial_der("FT", True, self, n=2)
         return fd(self._FT) * 1

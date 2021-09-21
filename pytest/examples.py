@@ -1,17 +1,17 @@
 if __name__ == "__main__":
 
-    import energyderivatives as ed
+    import finoptions as fo
     import numdifftools as nd
 
-    opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
 
     # print(opt.delta())
 
-    # opt = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    # opt = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
 
     # # # print(opt.greeks())
 
-    # # vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
+    # # vol = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
 
     # # # print(vol.volatility(3).root)
 
@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
     # print(opt.__repr__())
 
-    # opt = ed.BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    # opt = fo.BlackScholesOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
 
     # # print(opt.greeks())
 
-    # vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
+    # vol = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
 
     # # print(vol.volatility(3).root)
 
@@ -35,11 +35,11 @@ if __name__ == "__main__":
 
     # print(opt.__repr__())
 
-    # opt = ed.Black76Option(10.0, 8.0, 1.0, 0.02, 0.1)
+    # opt = fo.Black76Option(10.0, 8.0, 1.0, 0.02, 0.1)
 
     # # print(opt.greeks())
 
-    # vol = ed.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
+    # vol = fo.GBSOption(10.0, 8.0, 1.0, 0.02, 0.01)
 
     # # print(vol.volatility(3).root)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # import numpy as np
 
-    # opt = ed.MiltersenSchwartzOption(
+    # opt = fo.MiltersenSchwartzOption(
     #     Pt=np.exp(-0.05 / 4),
     #     FT=95,
     #     K=80,

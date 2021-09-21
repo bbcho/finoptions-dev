@@ -6,12 +6,12 @@ from matplotlib import figure
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_CRR_Tree():
 
-    opt = ed.binomial_tree_options.CRRBinomialTreeOption(
+    opt = fo.binomial_tree_options.CRRBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="european"
     )
 
@@ -22,7 +22,7 @@ def test_CRR_Tree():
         opt.put(), 0.9972167
     ), "CRRBinomialTreeOption put-euro price does not match fOptions. CRRBinomialTreeOption(S=50, K=40, t=5/12, r=0.1, b=0.1, sigma=0.4).put() should equal 0.9972167"
 
-    opt = ed.binomial_tree_options.CRRBinomialTreeOption(
+    opt = fo.binomial_tree_options.CRRBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="american"
     )
 
@@ -38,7 +38,7 @@ def test_CRR_Tree():
 
 def test_JR_Tree():
 
-    opt = ed.binomial_tree_options.JRBinomialTreeOption(
+    opt = fo.binomial_tree_options.JRBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="european"
     )
 
@@ -49,7 +49,7 @@ def test_JR_Tree():
         opt.put(), 1.001478
     ), "JRBinomialTreeOption put-euro price does not match fOptions. JRBinomialTreeOption(S=50, K=40, t=5/12, r=0.1, b=0.1, sigma=0.4).put() should equal 1.001478"
 
-    opt = ed.binomial_tree_options.JRBinomialTreeOption(
+    opt = fo.binomial_tree_options.JRBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="american"
     )
 
@@ -63,7 +63,7 @@ def test_JR_Tree():
 
 def test_TIAN_Tree():
 
-    opt = ed.binomial_tree_options.TIANBinomialTreeOption(
+    opt = fo.binomial_tree_options.TIANBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="european"
     )
 
@@ -74,7 +74,7 @@ def test_TIAN_Tree():
         opt.put(), 0.7288429
     ), "TIANBinomialTreeOption put-euro price does not match fOptions. TIANBinomialTreeOption(S=50, K=40, t=5/12, r=0.1, b=0.1, sigma=0.4).put() should equal 0.7288429"
 
-    opt = ed.binomial_tree_options.TIANBinomialTreeOption(
+    opt = fo.binomial_tree_options.TIANBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="american"
     )
 
@@ -99,7 +99,7 @@ def test_CRR_tree():
         ]
     )
     print(rm)
-    opt = ed.binomial_tree_options.CRRBinomialTreeOption(
+    opt = fo.binomial_tree_options.CRRBinomialTreeOption(
         S=50, K=40, t=5 / 12, r=0.1, b=0.1, sigma=0.4, n=5, type="european"
     )
 

@@ -48,8 +48,8 @@ class RollGeskeWhaleyOption(_Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.RollGeskeWhaleyOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30)
+    >>> import finoptions as fo
+    >>> opt = fo.RollGeskeWhaleyOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30)
     >>> opt.call()
     >>> opt.greeks(call=True)
 
@@ -375,8 +375,8 @@ class BAWAmericanApproxOption(_Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> import finoptions as fo
+    >>> opt = fo.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
     >>> opt.call()
     >>> opt.put()
     >>> opt.greeks(call=True)
@@ -535,8 +535,8 @@ class BAWAmericanApproxOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.call()
 
         References
@@ -582,8 +582,8 @@ class BAWAmericanApproxOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.BAWAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.put()
 
         References
@@ -682,8 +682,8 @@ class BSAmericanApproxOption(_Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.basic_american_options.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+    >>> import finoptions as fo
+    >>> opt = fo.basic_american_options.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
     >>> opt.call()
     >>> opt.put()
     >>> opt.greeks(call=True)
@@ -784,8 +784,8 @@ class BSAmericanApproxOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.call()
 
         References
@@ -807,8 +807,8 @@ class BSAmericanApproxOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
+        >>> import finoptions as fo
+        >>> opt = fo.BSAmericanApproxOption(10.0, 8.0, 1.0, 0.02, 0.01, 0.1)
         >>> opt.put()
 
         References

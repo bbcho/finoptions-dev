@@ -125,10 +125,10 @@ class MonteCarloOption:  # _Option
 
     Example
     -------
-    >>> import energyderivatives as ed
+    >>> import finoptions as fo
     >>> from scipy.stats import qmc, norm
     >>> import numpy as np
-    >>> from energyderivatives.monte_carlo_options import Innovations, Path, Payoff
+    >>> from finoptions.monte_carlo_options import Innovations, Path, Payoff
     >>> S = 100
     >>> K = 100
     >>> t = 1 / 12
@@ -166,7 +166,7 @@ class MonteCarloOption:  # _Option
                 St = self.S * np.exp(np.sum(self.path.generate_path(), axis=1))
                 return np.exp(-self.r * self.t) * np.maximum(self.K - St, 0)
 
-    >>> opt = ed.monte_carlo_options.MonteCarloOption(
+    >>> opt = fo.monte_carlo_options.MonteCarloOption(
             mc_loops, path_length, mc_paths,
             S, K, t, r, b, sigma,
             NormalSobolInnovations, WienerPath, PlainVanillaPayoff,
@@ -236,11 +236,11 @@ class MonteCarloOption:  # _Option
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> inno = ed.monte_carlo_options.NormalSobolInnovations
-        >>> path = ed.monte_carlo_options.WienerPath
-        >>> payoff = ed.monte_carlo_options.PlainVanillaPayoff
-        >>> opt = ed.monte_carlo_options.MonteCarloOption(50, 30, 5000,
+        >>> import finoptions as fo
+        >>> inno = fo.monte_carlo_options.NormalSobolInnovations
+        >>> path = fo.monte_carlo_options.WienerPath
+        >>> payoff = fo.monte_carlo_options.PlainVanillaPayoff
+        >>> opt = fo.monte_carlo_options.MonteCarloOption(50, 30, 5000,
                 100, 100, 1/12, 0.1, 0.1, 0.4, inno, path, payoff)
         >>> opt.call()
 
@@ -265,11 +265,11 @@ class MonteCarloOption:  # _Option
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> inno = ed.monte_carlo_options.NormalSobolInnovations
-        >>> path = ed.monte_carlo_options.WienerPath
-        >>> payoff = ed.monte_carlo_options.PlainVanillaPayoff
-        >>> opt = ed.monte_carlo_options.MonteCarloOption(50, 30, 5000,
+        >>> import finoptions as fo
+        >>> inno = fo.monte_carlo_options.NormalSobolInnovations
+        >>> path = fo.monte_carlo_options.WienerPath
+        >>> payoff = fo.monte_carlo_options.PlainVanillaPayoff
+        >>> opt = fo.monte_carlo_options.MonteCarloOption(50, 30, 5000,
                 100, 100, 1/12, 0.1, 0.1, 0.4, inno, path, payoff)
         >>> opt.put()
 

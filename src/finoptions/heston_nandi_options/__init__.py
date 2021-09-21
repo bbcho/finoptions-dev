@@ -43,8 +43,8 @@ class HestonNandiOption(_Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.heston_nandi_options.HestonNandiOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30)
+    >>> import finoptions as fo
+    >>> opt = fo.heston_nandi_options.HestonNandiOption(S=80, K=82, t=1/3, td=1/4, r=0.06, D=4, sigma=0.30)
     >>> opt.call()
     >>> opt.greeks(call=True)
 

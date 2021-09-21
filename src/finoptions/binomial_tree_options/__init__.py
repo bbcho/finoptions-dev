@@ -89,8 +89,8 @@ class CRRBinomialTreeOption(_Option):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
+    >>> import finoptions as fo
+    >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
     >>> opt.call()
     >>> opt.put()
     >>> opt.call(type='american')
@@ -155,8 +155,8 @@ class CRRBinomialTreeOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
+        >>> import finoptions as fo
+        >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
         >>> opt.call()
 
         References
@@ -184,8 +184,8 @@ class CRRBinomialTreeOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
+        >>> import finoptions as fo
+        >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='european')
         >>> opt.put()
 
         References
@@ -334,8 +334,8 @@ class CRRBinomialTreeOption(_Option):
 
         Example
         -------
-        >>> import energyderivatives as ed
-        >>> opt = ed.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='american')
+        >>> import finoptions as fo
+        >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='american')
         >>> opt.plot(call=False, figsize=(10,10))
         """
 
@@ -379,8 +379,8 @@ class JRBinomialTreeOption(CRRBinomialTreeOption):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.binomial_tree_options.JRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
+    >>> import finoptions as fo
+    >>> opt = fo.binomial_tree_options.JRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
     >>> opt.call()
     >>> opt.put()
     >>> opt.call(type='american')
@@ -445,8 +445,8 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
 
     Example
     -------
-    >>> import energyderivatives as ed
-    >>> opt = ed.binomial_tree_options.TIANBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
+    >>> import finoptions as fo
+    >>> opt = fo.binomial_tree_options.TIANBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
     >>> opt.call()
     >>> opt.put()
     >>> opt.call(type='american')

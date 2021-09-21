@@ -5,7 +5,7 @@ from matplotlib import figure
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_WienerPath():
@@ -15,7 +15,7 @@ def test_WienerPath():
     rpaths = np.genfromtxt(
         "./pytest/wiener_path_test.csv", delimiter=","
     )  # results to test against
-    paths = ed.monte_carlo_options.WienerPath(eps, 0.4, 1 / 360, 0.1).generate_path()
+    paths = fo.monte_carlo_options.WienerPath(eps, 0.4, 1 / 360, 0.1).generate_path()
 
     assert np.allclose(
         paths, rpaths

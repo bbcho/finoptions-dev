@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="energyderivatives",
+    name="finoptions",
     version="0.1.0",
     author="Ben Cho",
     license="MIT License",  # Chose a license from here: https://help.github.com/articles/licensing-a-repository
@@ -26,8 +26,8 @@ setuptools.setup(
         "Refined Products",
         "Products",
     ],
-    url="https://github.com/bbcho/energyderivatives-dev",
-    # download_url="https://github.com/bbcho/energyderivatives-dev/archive/refs/heads/main.zip",
+    url="https://github.com/bbcho/finoptions-dev",
+    # download_url="https://github.com/bbcho/finoptions-dev/archive/refs/heads/main.zip",
     install_requires=["scipy>=1.7", "numpy", "numdifftools", "matplotlib"],
     include_package_data=True,
     classifiers=[

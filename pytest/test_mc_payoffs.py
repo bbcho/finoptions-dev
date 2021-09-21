@@ -5,7 +5,7 @@ import numpy as _np
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src/")
 
 
-import energyderivatives as ed
+import finoptions as fo
 
 
 def test_PlainVanillaPayoff():
@@ -23,9 +23,9 @@ def test_PlainVanillaPayoff():
         "./pytest/sobol_path_test.csv", delimiter=","
     )  # load sobol paths from R since python version is slighly different in third path
 
-    path = ed.monte_carlo_options.WienerPath(eps, sigma, dt, b)
+    path = fo.monte_carlo_options.WienerPath(eps, sigma, dt, b)
     print(path.generate_path())
-    payoff = ed.monte_carlo_options.PlainVanillaPayoff(
+    payoff = fo.monte_carlo_options.PlainVanillaPayoff(
         path=path, S=S, K=K, t=t, sigma=sigma, r=r, b=b
     )
 
@@ -42,7 +42,7 @@ def test_PlainVanillaPayoff():
     ), "PlainVanillaPayoff no matching R's fOptions."
 
     # make K bigger so that the option value is > 0
-    payoff = ed.monte_carlo_options.PlainVanillaPayoff(
+    payoff = fo.monte_carlo_options.PlainVanillaPayoff(
         path=path, S=S, K=140, t=t, sigma=sigma, r=r, b=b
     )
 
@@ -65,9 +65,9 @@ def test_ArimeticAsianPayoff():
         "./pytest/sobol_path_test.csv", delimiter=","
     )  # load sobol paths from R since python version is slighly different in third path
 
-    path = ed.monte_carlo_options.WienerPath(eps, sigma, dt, b)
+    path = fo.monte_carlo_options.WienerPath(eps, sigma, dt, b)
 
-    payoff = ed.monte_carlo_options.ArithmeticAsianPayoff(
+    payoff = fo.monte_carlo_options.ArithmeticAsianPayoff(
         path=path, S=S, K=K, t=t, sigma=sigma, r=r, b=b
     )
 
@@ -84,7 +84,7 @@ def test_ArimeticAsianPayoff():
     ), "ArithmeticAsianPayoff not matching R's fOptions."
 
     # make K bigger so that the option value is > 0
-    payoff = ed.monte_carlo_options.ArithmeticAsianPayoff(
+    payoff = fo.monte_carlo_options.ArithmeticAsianPayoff(
         path=path, S=S, K=140, t=t, sigma=sigma, r=r, b=b
     )
 
