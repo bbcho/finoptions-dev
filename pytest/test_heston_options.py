@@ -20,8 +20,8 @@ t = 252
 r = 0.05 / t
 
 
-def test_fstarHN():
-    test = fo.heston_nandi_options._fstarHN(
+def test_fHN():
+    test = fo.heston_nandi_options._fHN(
         phi=phi,
         const=1,
         lamb=lamb,
@@ -33,11 +33,12 @@ def test_fstarHN():
         K=K,
         t=t,
         r=r,
+        real=True,
     )
 
     assert np.allclose(test, 0.01201465), "fstarHN failed test 1"
 
-    test = fo.heston_nandi_options._fstarHN(
+    test = fo.heston_nandi_options._fHN(
         phi=phi,
         const=0,
         lamb=lamb,
@@ -49,6 +50,7 @@ def test_fstarHN():
         K=K,
         t=t,
         r=r,
+        real=True,
     )
 
     assert np.allclose(test, 0.0001524204), "fstarHN failed test 2"
@@ -75,3 +77,19 @@ def test_heston_option_value():
 
     test = opt.put()
     assert np.allclose(test, 1.465121), "Heston Option failed test 2"
+
+
+def test_heston_delta_gamma():
+
+    opt = fo.heston_nandi_options.HestonNandiOption(
+        S=S, K=K, t=t, r=r, lamb=lamb, omega=omega, alpha=alpha, beta=beta, gamma=gamma
+    )
+
+    test = opt.delta(call=True)
+    assert np.allclose(test, 0.6739534), "Heston Greek failed test 1"
+
+    test = opt.delta(call=False)
+    assert np.allclose(test, -0.3260466), "Heston Greek failed test 2"
+
+    test = opt.gamma()
+    assert np.allclose(test, 0.02211149), "Heston Greek failed test 3"

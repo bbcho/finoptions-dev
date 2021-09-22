@@ -15,6 +15,9 @@ from scipy.integrate import quad as _quad
 #     # Return Value:
 #     list(premium = premium, delta = delta, gamma = gamma)
 
+_eps = 1.49e-8
+low_lim = 0
+high_lim = _np.inf
 
 class HNGGreeks(_GreeksFDM):
     pass
@@ -75,11 +78,12 @@ class HestonNandiOption:  # _Option
         K: float,
         t: float,
         r: float,
-        lamb: float,
-        omega: float,
-        alpha: float,
-        beta: float,
-        gamma: float,
+        lamb: float = None,
+        omega: float = None,
+        alpha: float = None,
+        beta: float = None,
+        gamma: float = None,
+        model=None,
     ):
 
         self._S = S
@@ -105,12 +109,14 @@ class HestonNandiOption:  # _Option
         """
         # fmt: off
         call1 = _quad(
-            _fstarHN, 0, _np.inf, 
-            args=(1, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r)
+            _fHN, low_lim, high_lim, 
+            args=(1, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
             )
         call2 = _quad(
-            _fstarHN, 0, _np.inf, 
-            args=(0, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r)
+            _fHN, low_lim, high_lim, 
+            args=(0, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
             )
         # fmt: on
 
@@ -127,7 +133,54 @@ class HestonNandiOption:  # _Option
         return self.call() + self._K * _np.exp(-self._r * self._t) - self._S
 
 
-def _fstarHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r):
+    def delta(self, call=True):
+        # Integrate:
+        # fmt: off
+        delta1 = _quad(
+            _fdeltaHN, low_lim, high_lim, 
+            args=(1, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
+            )
+        
+        delta2 = _quad(
+            _fdeltaHN, low_lim, high_lim, 
+            args=(0, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
+            )
+       
+        # Compute Call and Put Delta :
+        greek = 1/2 + _np.exp(-self._r*self._t) * delta1[0] - self._K * _np.exp(-self._r*self._t) * delta2[0]
+        if call==False:
+            greek = greek - 1
+
+        return greek
+
+    def gamma(self):
+        # Integrate:
+        # fmt: off
+        gamma1 = _quad(
+            _fgammaHN, low_lim, high_lim, 
+            args=(1, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
+            )
+        
+        gamma2 = _quad(
+            _fgammaHN, low_lim, high_lim, 
+            args=(0, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r),
+            epsabs=_eps, epsrel=_eps,
+            )
+       
+        # Compute Call and Put Delta :
+        greek = _np.exp(-self._r*self._t) * gamma1[0] - self._K * _np.exp(-self._r*self._t) * gamma2[0]
+
+        return greek
+
+
+
+def _fHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r, real=True):
+    """
+    real=True to return fstarHN, real=False to return fHN
+    """
 
     # Internal Function:
 
@@ -145,8 +198,33 @@ def _fstarHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r):
         a = a + cphi*r + b*omega - _np.log(1-2*alpha*b)/2
         b = cphi*(lamb+gamma) - gamma**2/2 + beta*b + 0.5*(cphi-gamma)**2/(1-2*alpha*b)
 
-    f = _np.real(_np.exp(-cphi0*_np.log(K)+cphi*_np.log(S)+a+b*sigma2 )/cphi0)/_np.pi
+    if real == True:
+        f = _np.real(_np.exp(-cphi0*_np.log(K)+cphi*_np.log(S)+a+b*sigma2 )/cphi0)/_np.pi
+    else:
+        f = _np.exp(-cphi0*_np.log(K)+cphi*_np.log(S)+a+b*sigma2 )/cphi0/_np.pi
 
     # Return Value:
     return f
     # fmt: on
+
+
+def _fdeltaHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r):
+    # Function to be integrated:
+    cphi0 = phi * _np.array([1j])
+    cphi = cphi0 + const
+    fdelta = cphi * _fHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r, real=False) / S
+
+    # Return Value:
+    return _np.real(fdelta)
+
+
+def _fgammaHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r):
+    # Function to be integrated:
+    cphi0 = phi * _np.array([1j])
+    cphi = cphi0 + const
+    fgamma = (
+        cphi * (cphi - 1) * _fHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r, real=False) / S ** 2
+    )
+
+    # Return Value:
+    return _np.real(fgamma)
