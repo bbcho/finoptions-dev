@@ -25,6 +25,15 @@ inno
 write.table(inno, "sobol.csv", row.names = FALSE, sep=",",  col.names=FALSE)
 inno <-  read.csv("sobol.csv", header=FALSE)
 
+# scrambled innos
+inno <- sobolInnovations(mcSteps, pathLength, init=TRUE, scrambling=2)
+
+write.table(inno, "sobol_scrambled.csv", row.names = FALSE, sep=",",  col.names=FALSE)
+inno <-  read.csv("sobol.csv", header=FALSE)
+
+
+
+
 # Second Step:
 # Write a function to generate the option's price paths.
 # Use a Wiener path:

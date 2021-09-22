@@ -1,13 +1,26 @@
 from ..base import Option as _Option
-from ..vanillaoptions import GBSOption as _GBSOption
+from ..vanillaoptions import GreeksFDM as _GreeksFDM
 import numpy as _np
-from scipy.optimize import root_scalar as _root_scalar
-import sys as _sys
-import warnings as _warnings
-import numdifftools as _nd
+from scipy.integrate import quad as _quad
+
+# def _HNGCharacteristics(lamb, omega, alpha, beta, gamma, S, K, t_in_days, r_daily, call=True):
+#     """
+#     Characteristics function for Heston Nandi Option
+#     """
+
+#     premium = HNGOption(TypeFlag, model, S, X, Time.inDays, r.daily)
+#     delta = HNGGreeks("Delta", TypeFlag, model, S, X, Time.inDays, r.daily)
+#     gamma = HNGGreeks("Gamma", TypeFlag, model, S, X, Time.inDays, r.daily)
+
+#     # Return Value:
+#     list(premium = premium, delta = delta, gamma = gamma)
 
 
-class HestonNandiOption(_Option):
+class HNGGreeks(_GreeksFDM):
+    pass
+
+
+class HestonNandiOption:  # _Option
     """
     Option class for the Heston-Nandi Garch Option Model.
 
@@ -84,19 +97,56 @@ class HestonNandiOption(_Option):
         # Integrate:
         call1 = integrate(.fstarHN, 0, Inf, const = 1, model = model,
             S = S, X = X, Time.inDays = Time.inDays, r.daily = r.daily)
-        # For SPlus Compatibility:
-        if (is.null(call1$value)) call1$value = call1$integral
-        call2 = integrate(.fstarHN, 0, Inf, const = 0, model = model,
-            S = S, X = X, Time.inDays = Time.inDays, r.daily = r.daily)
-        # For SPlus Compatibility:
-        if (is.null(call2$value)) call2$value = call2$integral
 
         # Compute Call Price:
         call.price = S/2 + exp(-r.daily*Time.inDays) * call1$value -
             X * exp(-r.daily*Time.inDays) * ( 1/2 + call2$value )
 
         """
-        pass
+        # fmt: off
+        call1 = _quad(
+            _fstarHN, 0, _np.inf, 
+            args=(1, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r)
+            )
+        call2 = _quad(
+            _fstarHN, 0, _np.inf, 
+            args=(0, self._lamb, self._omega, self._alpha, self._beta, self._gamma, self._S, self._K, self._t, self._r)
+            )
+        # fmt: on
+
+        # Compute Call Price:
+        price = (
+            self._S / 2
+            + _np.exp(-self._r * self._t) * call1[0]
+            - self._K * _np.exp(-self._r * self._t) * (1 / 2 + call2[0])
+        )
+
+        return price
 
     def put(self):
         return self.call() + self._K * _np.exp(-self._r * self._t) - self._S
+
+
+def _fstarHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r):
+
+    # Internal Function:
+
+    # Model Parameters:
+    gamma = gamma + lamb + 1 / 2
+    lamb = -1 / 2
+    sigma2 = (omega + alpha) / (1 - beta - alpha * gamma ** 2)
+    # Function to be integrated:
+    cphi0 = phi * _np.array([1j])
+    cphi = cphi0 + const
+    a = cphi * r
+    b = lamb * cphi + cphi * cphi / 2
+    # fmt: off
+    for i in range(1, t):
+        a = a + cphi*r + b*omega - _np.log(1-2*alpha*b)/2
+        b = cphi*(lamb+gamma) - gamma**2/2 + beta*b + 0.5*(cphi-gamma)**2/(1-2*alpha*b)
+
+    f = _np.real(_np.exp(-cphi0*_np.log(K)+cphi*_np.log(S)+a+b*sigma2 )/cphi0)/_np.pi
+
+    # Return Value:
+    return f
+    # fmt: on

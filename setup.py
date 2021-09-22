@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="finoptions",
-    version="0.1.0",
+    version="0.2.0",
     author="Ben Cho",
     license="MIT License",  # Chose a license from here: https://help.github.com/articles/licensing-a-repository
     author_email="ben.cho@gmail.com",
