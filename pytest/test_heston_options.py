@@ -52,3 +52,26 @@ def test_fstarHN():
     )
 
     assert np.allclose(test, 0.0001524204), "fstarHN failed test 2"
+
+
+def test_heston_option_value():
+
+    opt = fo.heston_nandi_options.HestonNandiOption(
+        S=S, K=K, t=t, r=r, lamb=lamb, omega=omega, alpha=alpha, beta=beta, gamma=gamma
+    )
+
+    test = opt.call()
+    assert np.allclose(test, 8.9921), "Heston Option failed test 1"
+
+    test = opt.put()
+    assert np.allclose(test, 4.115042), "Heston Option failed test 2"
+
+    opt = fo.heston_nandi_options.HestonNandiOption(
+        S=S, K=90, t=t, r=r, lamb=lamb, omega=omega, alpha=alpha, beta=beta, gamma=gamma
+    )
+
+    test = opt.call()
+    assert np.allclose(test, 15.85447), "Heston Option failed test 1"
+
+    test = opt.put()
+    assert np.allclose(test, 1.465121), "Heston Option failed test 2"
