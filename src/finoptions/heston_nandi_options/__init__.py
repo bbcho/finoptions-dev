@@ -1,7 +1,7 @@
 from ..base import Option as _Option
 from ..vanillaoptions import GreeksFDM as _GreeksFDM
 import numpy as _np
-from scipy.integrate import quad as _quad
+from scipy.optimize import minimize as _minimize
 from scipy.stats import norm as _norm
 from dataclasses import dataclass
 # from .hnGARCH import *
@@ -237,11 +237,20 @@ class ParamFit:
     z: _np.array
     h: _np.array
 
+    def __sub__(self,b):
+        return self.llhHNGarch - b.llhHNGarch
 
-def _llhHNGarch(x, lamb, omega, alpha, beta, gamma, trace, symmetric, rfr):
+
+def _llhHNGarch(x0, trace, symmetric, rfr, x, ret_obj=False):
 
     h = x.copy()
     z = x.copy()
+
+    lamb = x0[0]
+    omega = x0[1]
+    alpha = x0[2]
+    beta = x0[3]
+    gamma = x0[4]
 
     # Transform - to keep them between 0 and 1:
     omega = 1 / (1 + _np.exp(-omega))
@@ -270,12 +279,107 @@ def _llhHNGarch(x, lamb, omega, alpha, beta, gamma, trace, symmetric, rfr):
         print("Parameter Estimate\n")
         print(lamb, omega, alpha, beta, gam)
 
-    params = ParamFit(llhHNGarch, z, h)
+    if ret_obj:
+        params = ParamFit(llhHNGarch, z, h)
+    else:
+        params = llhHNGarch
 
     # Return Value:
     return params
 
 
-class HNGarch:
-    def __init__(self):
-        pass
+def hngarch_fit(x, lamb = -0.5, omega = None, alpha = None, beta = 0.1, gamma = 0, rf = 0, symmetric = True, trace = True, **kw_nlm):
+    # A function implemented by Diethelm Wuertz
+
+    # Description:
+    #   Fits Heston-Nandi Garch(1,1) time series model
+
+    # Parameters:
+    if omega is None:
+        omega = _np.var(x)
+    if alpha is None:
+        alpha = 0.1*omega
+
+    rfr = rf
+    gam = gamma
+
+    # Continue:
+    params = dict(lamb = lamb, omega = omega, alpha = alpha,
+        beta = beta, gamma = gam, rf = rfr)
+
+    # Transform Parameters and Calculate Start Parameters:
+    par_omega = -_np.log((1-omega)/omega)  # for 2
+    par_alpha = -_np.log((1-alpha)/alpha)  # for 3
+    par_beta = -_np.log((1-beta)/beta)     # for 4
+    par_start = [lamb, par_omega, par_alpha, par_beta]
+    if ~symmetric:
+        par_start.append(gam)
+
+    # Initial Log Likelihood:
+    opt = dict()
+    opt['value'] = _llhHNGarch(x0 = par_start, trace = trace, symmetric = symmetric, rfr = rfr, x = x)
+    opt['estimate'] = par_start
+    
+    if trace:
+        print(lamb, omega, alpha, beta, gam)
+        print(opt['value'])
+    
+    # Estimate Parameters:
+    res = _minimize(_llhHNGarch, par_start, args=(trace, symmetric, rfr, x), method='L-BFGS-B', **kw_nlm)
+
+    # Log-Likelihood:
+    opt['minimum'] = -res.fun + len(x)*_np.sqrt(2*_np.pi)
+    # opt['params'] = params
+    # opt['symmetric'] = symmetric
+    opt['estimate'] = res.x
+
+    # LLH, h, and z for Final Estimates:
+    final = _llhHNGarch(opt['estimate'], trace = False, symmetric=symmetric, rfr=rfr, x=x, ret_obj=True)
+    opt['h'] = final.h
+    opt['z'] = final.z
+
+    # Backtransform Estimated parameters:
+    lamb = opt['estimate'][0]
+    omega = (1 / (1+_np.exp(-opt['estimate'][1])))
+    opt['estimate'][1] = omega
+
+    alpha = (1 / (1+_np.exp(-opt['estimate'][2])))
+    opt['estimate'][2] = alpha
+
+    beta = (1 / (1+_np.exp(-opt['estimate'][3])))
+    opt['estimate'][3] = beta
+    
+    if symmetric: 
+        opt['estimate'][4] = 0
+    gam = opt['estimate'][4]
+
+    # names(opt$estimate) = c("lambda", "omega", "alpha", "beta", "gamma")
+
+    # Add to Output:
+    opt['model'] = dict(lamb = lamb, omega = omega, alpha = alpha,
+        beta = beta, gamma = gam, rf = rfr)
+    # opt['x'] = x
+
+    # Statistics - Printing:
+    opt['persistence'] = beta + alpha*gam*gam
+    opt['sigma2'] = ( omega + alpha ) / ( 1 - opt['persistence'] )
+
+    # Print Estimated Parameters:
+    if (trace):
+        print(opt['estimate'])
+
+    # # Add title and description:
+    # if (is.null(title))
+    #     
+    # opt$title = title
+    # if (is.null(description))
+    #     description = description()
+    # opt$description = description
+
+    # # Return Value:
+    # class(opt) = "hngarch"
+    # invisible(opt)
+
+    opt['title'] = "Heston-Nandi Garch Parameter Estimation"
+
+    return opt

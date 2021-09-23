@@ -30,6 +30,6 @@ symmetric = True
 
 def test_llhHNGarch():
     opt = fo.heston_nandi_options._llhHNGarch(
-        ts, lamb, par_omega, par_alpha, par_beta, 0, trace, symmetric, rfr
+        [lamb, par_omega, par_alpha, par_beta, 0], trace, symmetric, rfr, ts, True
     )
     assert np.allclose(opt.llhHNGarch, -1226.474), "HNGarch test 1 failed"
