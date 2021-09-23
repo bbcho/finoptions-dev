@@ -176,7 +176,6 @@ class HestonNandiOption:  # _Option
         return greek
 
 
-
 def _fHN(phi, const, lamb, omega, alpha, beta, gamma, S, K, t, r, real=True):
     """
     real=True to return fstarHN, real=False to return fHN
