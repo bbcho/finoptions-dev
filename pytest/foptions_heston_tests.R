@@ -30,3 +30,105 @@ HNGOption("p", model = model, S = S, X = 90,
 
 HNGGreeks("Delta", "c", model = model, S = S, X = X,
           Time.inDays = Time.inDays, r.daily = r.daily)
+
+HNGGreeks("Delta", "p", model = model, S = S, X = X,
+          Time.inDays = Time.inDays, r.daily = r.daily)
+
+
+HNGGreeks("Gamma", "c", model = model, S = S, X = X,
+          Time.inDays = Time.inDays, r.daily = r.daily)
+
+HNGGreeks("Gamma", "p", model = model, S = S, X = X,
+          Time.inDays = Time.inDays, r.daily = r.daily)
+.Machine$double.eps^0.25
+
+
+#####
+
+library(fOptions)
+
+
+## hngarchSim -
+# Simulate a Heston Nandi Garch(1,1) Process:
+# Symmetric Model - Parameters:
+model = list(lambda = 4, omega = 8e-5, alpha = 6e-5,
+             beta = 0.7, gamma = 0, rf = 0)
+ts = hngarchSim(model = model, n = 500, n.start = 100)
+par(mfrow = c(2, 1), cex = 0.75)
+ts.plot(ts, col = "steelblue", main = "HN Garch Symmetric Model")
+grid()
+
+
+mle = hngarchFit(model = model, x = ts, symmetric = TRUE)
+mle
+
+mle2 = hngarchFit(x = ts, symmetric = TRUE)
+mle2
+
+
+# Parameters:
+rfr = model$rf
+lambda = model$lambda
+omega = model$omega
+alpha = model$alpha
+beta = model$beta
+gam = model$gamma
+
+# Continue:
+params = c(lambda = lambda, omega = omega, alpha = alpha,
+           beta = beta, gamma = gam, rf = rfr)
+symmetric = TRUE
+# Transform Parameters and Calculate Start Parameters:
+par.omega = -log((1-omega)/omega)  # for 2
+par.alpha = -log((1-alpha)/alpha)  # for 3
+par.beta = -log((1-beta)/beta)     # for 4
+par.start = c(lambda, par.omega, par.alpha, par.beta)
+if (!symmetric) par.start = c(par.start, gam)
+
+par.start
+
+opt <- .llhHNGarch2(par = par.start,
+            trace = TRUE, symmetric = symmetric, rfr = rfr, x = ts)
+opt
+
+
+.llhHNGarch2 =
+  function(par, trace, symmetric, rfr, x)
+  {
+    # h = sigma^2
+    h = Z = x
+    lambda = par[1]
+    
+    # Transform - to keep them between 0 and 1:
+    omega = 1 / (1+exp(-par[2]))
+    alpha = 1 / (1+exp(-par[3]))
+    beta = 1 / (1+exp(-par[4]))
+    
+    # Add gamma if selected:
+    if (!symmetric) gam = par[5] else gam = 0
+    
+    # HN Garch Filter:
+    h[1] = ( omega + alpha )/( 1 - alpha*gam*gam - beta)
+    Z[1] = ( x[1] - rfr - lambda*h[1] ) / sqrt(h[1])
+    cat(Z[1], x[1], rfr, lambda, h[1], sqrt(h[1]))
+    for ( i in 2:length(Z) ) {
+      h[i] = omega + alpha * ( Z[i-1] - gam * sqrt(h[i-1]) )^2 +
+        beta * h[i-1]
+      Z[i] = ( x[i] - rfr - lambda*h[i] ) / sqrt(h[i])
+    }
+    
+    # Calculate Log - Likelihood for Normal Distribution:
+    llhHNGarch = -sum(log( dnorm(Z)/sqrt(h) ))
+    if (trace) {
+      cat("Parameter Estimate\n")
+      print(c(lambda, omega, alpha, beta, gam))
+    }
+    
+    # Attribute Z and h to the result:
+    attr(llhHNGarch, "Z") = Z
+    attr(llhHNGarch, "h") = h
+    
+    # Return Value:
+    llhHNGarch
+  }
+
