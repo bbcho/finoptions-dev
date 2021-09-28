@@ -53,20 +53,30 @@ library(fOptions)
 # Symmetric Model - Parameters:
 model = list(lambda = 4, omega = 8e-5, alpha = 6e-5,
              beta = 0.7, gamma = 0, rf = 0)
-ts = hngarchSim(model = model, n = 500, n.start = 100)
+
+n = 500
+n.start = 100
+inno = rnorm(n)
+start.inno = rnorm(n.start)
+
+write.csv(inno, file='inno.csv', row.names=FALSE)
+write.csv(start.inno, file='start_inno.csv', row.names=FALSE)
+
+ts = hngarchSim(model = model, n = 500, n.start = 100, inno=inno, start.innov = start.inno)
+write.csv(ts, file='ts.csv', row.names=FALSE)
+
+
+
 par(mfrow = c(2, 1), cex = 0.75)
 ts.plot(ts, col = "steelblue", main = "HN Garch Symmetric Model")
 grid()
 
 
-mle = hngarchFit(model = model, x = ts, symmetric = TRUE)
+mle = hngarchFit(x = ts, symmetric = TRUE)
 mle
 
-mle2 = hngarchFit(x = ts, symmetric = TRUE)
-mle2
 
-
-# Parameters:
+symmetric=TRUE
 rfr = model$rf
 lambda = model$lambda
 omega = model$omega
@@ -77,7 +87,7 @@ gam = model$gamma
 # Continue:
 params = c(lambda = lambda, omega = omega, alpha = alpha,
            beta = beta, gamma = gam, rf = rfr)
-symmetric = TRUE
+
 # Transform Parameters and Calculate Start Parameters:
 par.omega = -log((1-omega)/omega)  # for 2
 par.alpha = -log((1-alpha)/alpha)  # for 3
@@ -85,9 +95,19 @@ par.beta = -log((1-beta)/beta)     # for 4
 par.start = c(lambda, par.omega, par.alpha, par.beta)
 if (!symmetric) par.start = c(par.start, gam)
 
-par.start
+# Initial Log Likelihood:
+opt = list()
+opt$value = .llhHNGarch(par = par.start,
+                        trace = trace, symmetric = symmetric, rfr = rfr, x = x)
+opt$estimate = par.start
+if (trace) {
+  print(c(lambda, omega, alpha, beta, gam))
+  print(opt$value)
+}
 
-opt <- .llhHNGarch2(par = par.start,
-            trace = TRUE, symmetric = symmetric, rfr = rfr, x = ts)
+# Estimate Parameters:
+opt = nlm(.llhHNGarch, par.start,
+          trace = trace, symmetric = symmetric, rfr = rfr, x = x)
+
+
 opt
-

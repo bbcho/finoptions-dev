@@ -368,18 +368,70 @@ def hngarch_fit(x, lamb = -0.5, omega = None, alpha = None, beta = 0.1, gamma = 
     if (trace):
         print(opt['estimate'])
 
-    # # Add title and description:
-    # if (is.null(title))
-    #     
-    # opt$title = title
-    # if (is.null(description))
-    #     description = description()
-    # opt$description = description
-
-    # # Return Value:
-    # class(opt) = "hngarch"
-    # invisible(opt)
-
     opt['title'] = "Heston-Nandi Garch Parameter Estimation"
 
     return opt
+
+
+def hngarch_sim(lamb = -0.5, omega = None, alpha = None, beta = 0.1, gamma = 0, rf = 0, n = 500, n_start = 0, inno=None, inno_start=None):
+    """
+    Description:
+    Simulates a HN-GARCH time series with user supplied innovations.
+
+    Details:
+      The function simulates a Heston Nandi Garch(1,1) process with
+      structure parameters specified through the parameters 
+      lambda, omega, alpha, beta, gamma, rf.
+      The function returns the simulated time series points
+      neglecting those from the first "start_innov" innovations.
+
+    Parameters
+    ----------
+    lamb : float
+    omega : float
+    alpha : float
+    beta : float
+    gamma : float
+    rf : float
+    n : int
+    n_start : int
+    inno : 
+    inno_start :
+
+    Example:
+      x = hngarch()
+      plot(100*x, type="l", xlab="Day numbers",
+        ylab="Daily Returns %", main="Heston Nandi GARCH")
+      S0 = 1
+      plot(S0*exp(cumsum(x)), type="l", xlab="Day Numbers",
+        ylab="Daily Prices", main="Heston Nandi GARCH") }
+    """
+    # FUNCTION:
+
+    # Innovations:
+    if inno is None:
+        inno = _np.random.normal(0, 1, n)
+    if (inno_start is None) & (n_start > 0):
+        inno_start = _np.random.normal(0, 1, n_start)
+
+    if inno_start is not None:
+        x = _np.concatenate((inno_start, inno))
+    else:
+        x = inno.copy()
+    h = x.copy()
+    Z = x.copy()
+    
+    nt = n_start + n
+
+    # Recursion:
+    h[0] = ( omega + alpha )/( 1 - alpha*gamma*gamma - beta )
+    x[0] = rf + lamb*h[0] + _np.sqrt(h[0]) * Z[0]
+    for i in range(1,nt):
+        h[i] = omega + alpha*(Z[i-1] - gamma*_np.sqrt(h[i-1]))**2 + beta*h[i-1]
+        x[i] = rf + lamb*h[i] + _np.sqrt(h[i]) * Z[i]
+
+    # Series:
+    x = x[(n_start):]
+
+    # Return Value:
+    return x
