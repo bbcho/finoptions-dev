@@ -49,3 +49,8 @@ opt.put() # to get put price
 opt.summary() # for a printed summary of the option
 opt.greeks() # to get the greeks for the option
 ```
+# Notebooks
+
+To see example notebooks, please see github repo found here:
+
+https://github.com/bbcho/finoptions-dev/tree/main/notebooks
