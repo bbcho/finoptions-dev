@@ -52,7 +52,7 @@ class CRRBinomialTreeOption(_Option):
     """
     Binomial models were first suggested by Cox, Ross and Rubinstein (1979), CRR,
     and then became widely used because of its intuition and easy implementation. Binomial trees are
-    constructedon a discrete-time lattice. With the time between two trading events shrinking to zero,
+    constructed on a discrete-time lattice. With the time between two trading events shrinking to zero,
     the evolution of the price converges weakly to a lognormal diffusion. Within this mode the European
     options value converges to the value given by the Black-Scholes formula.
 
@@ -480,3 +480,170 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
             return out[0]
         else:
             return out
+
+
+class TrinomialTreeOption(CRRBinomialTreeOption):
+    """
+    Description:
+          Calculates option prices from the Trinomial tree model.
+
+        Arguments:
+          AmeEurFlag - a character value, either "a" or "e" for
+              a European or American style option
+          CallPutFlag - a character value, either "c" or "p" for
+              a call or put option
+          S, X, Time, r, b, sigma - the usual option parameters
+          n - an integer value, the depth of the tree
+
+        Value:
+          Returns the price of the options.
+
+        Details:
+          Trinomial trees in option pricing are similar to
+          binomial trees. Trinomial trees can be used to
+          price both European and American options on a single
+          underlying asset.
+          Because the asset price can move in three directions
+          from a given node, compared with only two in a binomial
+          tree, the number of time steps can be reduced to attain
+          the same accuracy as in the binomial tree.
+
+        Reference:
+          E.G Haug, The Complete Guide to Option Pricing Formulas
+          Chapter 3.2
+    """
+
+    __name__ = "TrinomialTreeOption"
+    __title__ = "Trinomial Tree Model"
+
+    def _calc_price(self, z, n, type, tree):
+
+        dt = self._t / n
+
+        # Up-and-down jump sizes:
+        u = _np.exp(self._sigma * _np.sqrt(2 * dt))
+        d = _np.exp(-self._sigma * _np.sqrt(2 * dt))
+        # Probabilities of going up and down:
+        pu = (
+            (_np.exp(self._b * dt / 2) - _np.exp(-self._sigma * _np.sqrt(dt / 2)))
+            / (
+                _np.exp(self._sigma * _np.sqrt(dt / 2))
+                - _np.exp(-self._sigma * _np.sqrt(dt / 2))
+            )
+        ) ** 2
+        pd = (
+            (_np.exp(self._sigma * _np.sqrt(dt / 2)) - _np.exp(self._b * dt / 2))
+            / (
+                _np.exp(self._sigma * _np.sqrt(dt / 2))
+                - _np.exp(-self._sigma * _np.sqrt(dt / 2))
+            )
+        ) ** 2
+
+        # Probability of staying at the same asset price level:
+        pm = 1 - pu - pd
+        Df = _np.exp(-self._r * dt)
+
+        OptionValue = _np.repeat(0.0, 2 * n + 1)
+
+        for i in range(0, (2 * n)):
+            OptionValue[i] = _np.maximum(
+                0,
+                z
+                * (
+                    self._S
+                    * u ** _np.maximum(i - n, 0)
+                    * d ** _np.maximum(n * 2 - n - i, 0)
+                    - self._K
+                ),
+            )
+
+        if type == "european":
+            out = self._euro(OptionValue, n, Df, pu, pd, pm, tree)
+        elif type == "american":
+            out = self._amer(
+                OptionValue, n, Df, pu, pd, pm, self._K, d, self._S, u, z, tree
+            )
+
+        if tree == False:
+            return out[0]
+        else:
+            return out
+
+    def _euro(self, OptionValue, n, Df, pu, pd, pm, tree=False):
+        tr = OptionValue.copy()
+        for j in _np.arange(0, n)[::-1]:
+            # tr = _np.append(tr, _np.zeros(n - j))
+            for i in _np.arange(0, j * 2 + 1):
+                OptionValue[i] = (
+                    pu * OptionValue[i + 2]
+                    + pm * OptionValue[i + 1]
+                    + pd * OptionValue[i]
+                ) * Df
+                tr = _np.append(tr, OptionValue[i])
+
+        if tree == True:
+            tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
+            return tr
+        else:
+            return OptionValue
+
+    def _amer(self, OptionValue, n, Df, pu, pd, pm, K, d, S, u, z, tree=False):
+        tr = OptionValue.copy()
+        for j in _np.arange(0, n)[::-1]:
+            # tr = _np.append(tr, _np.zeros(n - j))
+            # tr = _np.append(tr, _np.zeros(n + 1 - j))
+            for i in _np.arange(0, j * 2 + 1):
+                # OptionValue[i] = 1
+                # fmt: off
+                a = (z * (S * u ** _np.maximum(i - j, 0) * d ** _np.maximum(j * 2 - j - i, 0) - K))
+                b = ( pu * OptionValue[i + 2] + pm * OptionValue[i + 1] + pd * OptionValue[i])* Df
+                OptionValue[i] = _np.maximum(a, b)
+                # fmt: on
+                tr = _np.append(tr, OptionValue[i])
+
+        print(tr.shape)
+
+        if tree == True:
+            # tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
+            tr = self._reshape(tr, n)
+            return tr
+        else:
+            return OptionValue
+
+    @docstring_from(GreeksFDM.delta)
+    def delta(self, call: bool = True):
+        return self._greeks.delta(call=call)
+
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
+
+    @docstring_from(GreeksFDM.vega)
+    def vega(self):
+        return self._greeks.vega()
+
+    @docstring_from(GreeksFDM.rho)
+    def rho(self, call: bool = True):
+        return self._greeks.rho(call=call)
+
+    @docstring_from(GreeksFDM.lamb)
+    def lamb(self, call: bool = True):
+        return self._greeks.lamb(call=call)
+
+    @docstring_from(GreeksFDM.gamma)
+    def gamma(self):
+        return self._greeks.gamma()
+
+    @docstring_from(GreeksFDM.greeks)
+    def greeks(self, call: bool = True):
+        return self._greeks.greeks(call=call)
+
+    def _reshape(self, tr, n):
+        out = _np.zeros((2 * n + 1, n + 1))
+        for i in range(0, out.shape[1]):
+            if i > 0:
+                out[n - i : n + i + 1, i] = tr[::-1][i ** 2 : i ** 2 + 2 * i + 1]
+            else:
+                out[n][i] = tr[::-1][0]
+
+        return out
