@@ -69,8 +69,8 @@ TrinomialTreeOption  =
                                        d^max(n*2-n-i, 0) - X))}
     
     for (j in (n-1):0) {
-      print(j)
       for (i in 0:(j*2)) {
+        
         # European Type:
         if (AmeEurFlag == "e") {
           OptionValue[i+1]  =  (
@@ -87,6 +87,7 @@ TrinomialTreeOption  =
               pd * OptionValue[i+1]) * Df
           
           OptionValue[i+1]  =  max(a, b)
+          print(paste(i,j, OptionValue[i+1]))
           } } }
     TrinomialTree  =  OptionValue[1]
     
@@ -96,7 +97,7 @@ TrinomialTreeOption  =
 
 # Example:  
 TrinomialTreeOption(AmeEurFlag = "a", CallPutFlag = "p", S = 100, 
-                    X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 30)
+                    X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 9)
 
 TrinomialTreeOption(AmeEurFlag = "a", CallPutFlag = "c", S = 100, 
                     X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 30)

@@ -545,7 +545,7 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
 
         OptionValue = _np.repeat(0.0, 2 * n + 1)
 
-        for i in range(0, (2 * n)):
+        for i in _np.arange(0, (2 * n)):
             OptionValue[i] = _np.maximum(
                 0,
                 z
@@ -560,6 +560,9 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
         if type == "european":
             out = self._euro(OptionValue, n, Df, pu, pd, pm, tree)
         elif type == "american":
+            # for j in _np.arange(0, n)[::-1]:
+            #     for i in _np.arange(0, j * 2 + 1):
+            #         print(i, j)
             out = self._amer(
                 OptionValue, n, Df, pu, pd, pm, self._K, d, self._S, u, z, tree
             )
@@ -570,7 +573,8 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
             return out
 
     def _euro(self, OptionValue, n, Df, pu, pd, pm, tree=False):
-        tr = OptionValue.copy()
+        list = []
+        tr = _np.array(list)
         for j in _np.arange(0, n)[::-1]:
             # tr = _np.append(tr, _np.zeros(n - j))
             for i in _np.arange(0, j * 2 + 1):
@@ -582,29 +586,25 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
                 tr = _np.append(tr, OptionValue[i])
 
         if tree == True:
-            tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
+            # tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
+            tr = self._reshape(tr, n)
             return tr
         else:
             return OptionValue
 
     def _amer(self, OptionValue, n, Df, pu, pd, pm, K, d, S, u, z, tree=False):
-        tr = OptionValue.copy()
+        list = []
+        tr = _np.array(list)
         for j in _np.arange(0, n)[::-1]:
-            # tr = _np.append(tr, _np.zeros(n - j))
-            # tr = _np.append(tr, _np.zeros(n + 1 - j))
             for i in _np.arange(0, j * 2 + 1):
-                # OptionValue[i] = 1
                 # fmt: off
-                a = (z * (S * u ** _np.maximum(i - j, 0) * d ** _np.maximum(j * 2 - j - i, 0) - K))
+                a = (z * (S * u ** _np.maximum(i - j, 0) * d ** _np.maximum(j - i, 0) - K))
                 b = ( pu * OptionValue[i + 2] + pm * OptionValue[i + 1] + pd * OptionValue[i])* Df
                 OptionValue[i] = _np.maximum(a, b)
                 # fmt: on
                 tr = _np.append(tr, OptionValue[i])
 
-        print(tr.shape)
-
         if tree == True:
-            # tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
             tr = self._reshape(tr, n)
             return tr
         else:
@@ -639,11 +639,11 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
         return self._greeks.greeks(call=call)
 
     def _reshape(self, tr, n):
-        out = _np.zeros((2 * n + 1, n + 1))
+        out = _np.zeros((2 * n - 1, n))
         for i in range(0, out.shape[1]):
             if i > 0:
-                out[n - i : n + i + 1, i] = tr[::-1][i ** 2 : i ** 2 + 2 * i + 1]
+                out[n - i - 1 : n + i, i] = tr[::-1][i ** 2 : i ** 2 + 2 * i + 1]
             else:
-                out[n][i] = tr[::-1][0]
+                out[n - 1][i] = tr[::-1][0]
 
         return out
