@@ -96,8 +96,11 @@ TrinomialTreeOption  =
   }
 
 # Example:  
+TrinomialTreeOption(AmeEurFlag = "a", CallPutFlag = "c", S = 100, 
+                    X = 100, Time = 3, r = 0.03, b = -0.04, sigma = 0.2, n = 9)
+
 TrinomialTreeOption(AmeEurFlag = "a", CallPutFlag = "p", S = 100, 
-                    X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 9)
+                    X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 30)
 
 TrinomialTreeOption(AmeEurFlag = "a", CallPutFlag = "c", S = 100, 
                     X = 110, Time = 0.5, r = 0.1, b = 0.1, sigma = 0.27, n = 30)

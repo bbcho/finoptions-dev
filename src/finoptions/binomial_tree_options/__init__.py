@@ -48,6 +48,45 @@ class BiTreePlotter:
             return 0
 
 
+class TriTreePlotter:
+    def __init__(self, tree):
+        self._tree = tree
+
+    def plot(self, dx=-0.025, dy=0.4, size=12, digits=2, **kwargs):
+        n = self._tree.shape[1] - 1
+        fig = _plt.figure(**kwargs)
+        for i in range(n + 1):
+            for j in range(-i + 1, i):
+                self._plot_node(i - 1, j, dx, dy, size, digits)
+
+        _plt.annotate(
+            round(self._tree[n, 0], digits),
+            xy=(0, 0),
+            xytext=(+dx, +dy),
+            fontsize=size,
+        )
+        _plt.xlabel("n", fontsize=size)
+        _plt.ylabel("Option Value", fontsize=size)
+        _plt.title("Option Tree", fontsize=int(size * 1.3))
+        return fig
+
+    def _plot_node(self, i, j, dx, dy, size, digits):
+        for c in [-1, 0, 1]:
+            depth = self._tree.shape[1] - 1
+            x = _np.array([0, 1]) + i
+            y = _np.array([0, c]) + j
+            _plt.plot(x, y, "bo-")
+            p = (x[1], y[1])
+            # print(p)
+            # print(p[0], p[1] + 2)
+            _plt.annotate(
+                round(self._tree[-y[1] + depth][x[1]], digits),
+                xy=p,
+                xytext=(p[0] + dx, p[1] + dy),
+                fontsize=size,
+            )
+
+
 class CRRBinomialTreeOption(_Option):
     """
     Binomial models were first suggested by Cox, Ross and Rubinstein (1979), CRR,
@@ -543,64 +582,27 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
         pm = 1 - pu - pd
         Df = _np.exp(-self._r * dt)
 
+        # init tree as 1-D array
         OptionValue = _np.repeat(0.0, 2 * n + 1)
-
         for i in _np.arange(0, (2 * n)):
-            OptionValue[i] = _np.maximum(
-                0,
-                z
-                * (
-                    self._S
-                    * u ** _np.maximum(i - n, 0)
-                    * d ** _np.maximum(n * 2 - n - i, 0)
-                    - self._K
-                ),
+            a = 0
+            b = z * (
+                self._S
+                * u ** _np.maximum(i - n, 0)
+                * d ** _np.maximum(n * 2 - n - i, 0)
+                - self._K
             )
+            OptionValue[i] = _np.maximum(a, b)
 
-        if type == "european":
-            out = self._euro(OptionValue, n, Df, pu, pd, pm, tree)
-        elif type == "american":
-            # for j in _np.arange(0, n)[::-1]:
-            #     for i in _np.arange(0, j * 2 + 1):
-            #         print(i, j)
-            out = self._amer(
-                OptionValue, n, Df, pu, pd, pm, self._K, d, self._S, u, z, tree
-            )
-
-        if tree == False:
-            return out[0]
-        else:
-            return out
-
-    def _euro(self, OptionValue, n, Df, pu, pd, pm, tree=False):
-        list = []
-        tr = _np.array(list)
-        for j in _np.arange(0, n)[::-1]:
-            # tr = _np.append(tr, _np.zeros(n - j))
-            for i in _np.arange(0, j * 2 + 1):
-                OptionValue[i] = (
-                    pu * OptionValue[i + 2]
-                    + pm * OptionValue[i + 1]
-                    + pd * OptionValue[i]
-                ) * Df
-                tr = _np.append(tr, OptionValue[i])
-
-        if tree == True:
-            # tr = _np.reshape(tr[::-1], (n + 1, n + 1)).T
-            tr = self._reshape(tr, n)
-            return tr
-        else:
-            return OptionValue
-
-    def _amer(self, OptionValue, n, Df, pu, pd, pm, K, d, S, u, z, tree=False):
         list = []
         tr = _np.array(list)
         for j in _np.arange(0, n)[::-1]:
             for i in _np.arange(0, j * 2 + 1):
                 # fmt: off
-                a = (z * (S * u ** _np.maximum(i - j, 0) * d ** _np.maximum(j - i, 0) - K))
-                b = ( pu * OptionValue[i + 2] + pm * OptionValue[i + 1] + pd * OptionValue[i])* Df
-                OptionValue[i] = _np.maximum(a, b)
+                if type == "european":
+                    OptionValue[i] = self._euro(i, OptionValue, Df, pu, pd, pm)
+                elif type == "american":
+                    OptionValue[i] = self._amer(i, j, OptionValue, Df, pu, pd, pm, self._K, d, self._S, u, z)
                 # fmt: on
                 tr = _np.append(tr, OptionValue[i])
 
@@ -608,7 +610,22 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
             tr = self._reshape(tr, n)
             return tr
         else:
-            return OptionValue
+            return OptionValue[0]
+
+    def _euro(self, i, OptionValue, Df, pu, pd, pm):
+        # fmt: off
+        out = (pu * OptionValue[i + 2] + pm * OptionValue[i + 1] + pd * OptionValue[i]) * Df
+        # fmt: on
+        return out
+
+    def _amer(self, i, j, OptionValue, Df, pu, pd, pm, K, d, S, u, z):
+        # fmt: off
+        a = (z * (S * u ** _np.maximum(i - j, 0) * d ** _np.maximum(j - i, 0) - K))
+        b = ( pu * OptionValue[i + 2] + pm * OptionValue[i + 1] + pd * OptionValue[i])* Df
+        out = _np.maximum(a, b)
+        # fmt: on
+
+        return out
 
     @docstring_from(GreeksFDM.delta)
     def delta(self, call: bool = True):
@@ -647,3 +664,42 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
                 out[n - 1][i] = tr[::-1][0]
 
         return out
+
+    def plot(self, call=True, dx=-0.2, dy=0.2, size=12, digits=2, **kwargs):
+        """
+        Method to plot the trinomial tree values
+
+        Parameters
+        ----------
+        call : bool
+            Set to True to plot a call option. Otherwise set to False for a put option. By default True.
+        dx : float
+            x-offset for the node values in the same units at the call or put option value.
+        dy : float
+            y-offset for the node values in the same units at the call or put option value.
+        size : float
+            Font size for node and axis labels. By default 12. Title is 30% larger.
+        digits : int
+            Number of significant figures to show for option values. By default 2.
+        **kwargs
+            paramters to pass to matplotlib
+
+        Returns
+        -------
+        matplotlib figure object
+
+        Example
+        -------
+        >>> import finoptions as fo
+        >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0.1, sigma=0.4, n=5, type='american')
+        >>> opt.plot(call=False, figsize=(10,10))
+        """
+
+        if call == True:
+            tree = self.call(tree=True)
+        else:
+            tree = self.put(tree=True)
+
+        plotter = TriTreePlotter(tree)
+
+        return plotter.plot(dx, dy, size, digits, **kwargs)
