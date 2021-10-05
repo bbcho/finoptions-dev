@@ -584,7 +584,7 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
 
         # init tree as 1-D array
         OptionValue = _np.repeat(0.0, 2 * n + 1)
-        for i in _np.arange(0, (2 * n)):
+        for i in _np.arange(0, (2 * n + 1)):
             a = 0
             b = z * (
                 self._S
@@ -596,6 +596,7 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
 
         list = []
         tr = _np.array(list)
+        tr = OptionValue.copy()
         for j in _np.arange(0, n)[::-1]:
             for i in _np.arange(0, j * 2 + 1):
                 # fmt: off
@@ -607,7 +608,7 @@ class TrinomialTreeOption(CRRBinomialTreeOption):
                 tr = _np.append(tr, OptionValue[i])
 
         if tree == True:
-            tr = self._reshape(tr, n)
+            tr = self._reshape(tr, n + 1)
             return tr
         else:
             return OptionValue[0]
