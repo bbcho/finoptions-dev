@@ -31,6 +31,9 @@ class TrinomialSpreadOption:
         self._n = n
         self._type = type
 
+    def call(self):
+        return self._calc_price(z=1, type=self._type, tree=False)
+
     def _calc_price(self, z, type, tree):
         n = self._n
         S1 = self._S1
@@ -53,7 +56,7 @@ class TrinomialSpreadOption:
         lam1 = 0.5 * (sdp + _np.sqrt(sdp * sdp - 4 * (1 - rho * rho) * sd1 * sd1 * sd2 * sd2))
         lam2 = 0.5 * (sdp - _np.sqrt(sdp * sdp - 4 * (1 - rho * rho) * sd1 * sd1 * sd2 * sd2))
         the = _np.arctan((lam1-sd1*sd1)/(rho*sd1*sd2))
-        Df = _np.exp(-r*dt)
+        Df = _np.exp(b-r*dt)
         h = _np.exp(-1*_np.sin(the)*_np.sqrt(lam2)* _np.sqrt(3 * dt) - 0.5*sd1*sd1*dt)
         v = _np.exp(_np.cos(the)*_np.sqrt(lam1)* _np.sqrt(3 * dt) - 0.5*sd1*sd1*dt)
 
@@ -68,11 +71,15 @@ class TrinomialSpreadOption:
 
         OptionValue = self._euro(OptionValue, n, Df, pm)
 
+        OptionValue = _np.sum(_np.concatenate(_np.multiply(OptionValue[-1][n-1:n+2, n-1:n+2],pm)))*Df
+
         return OptionValue
         
     def _euro(self, OptionValue, n, Df, pm):
         tr = OptionValue.copy()
         old = tr.copy()
+
+        tr = list()
 
         # step back in time from t=T to t=0 
         for j in _np.arange(1,n):
@@ -86,7 +93,7 @@ class TrinomialSpreadOption:
             # centered inside and stack
             latest = _np.pad(latest, (j, j))
 
-            tr = _np.vstack((tr, latest))
+            tr.append(latest)
 
         return tr
 
@@ -123,7 +130,7 @@ class TrinomialSpreadOption:
 
 if __name__ == "__main__":
 
-    opt = TrinomialSpreadOption(70, 60, 0, 1 / 12, 0.03, 0.03, 0.2, 0.1, 0.5, n=3)
+    opt = TrinomialSpreadOption(70, 60, 0, 1 / 12, 0.03, 0.03, 0.2, 0.1, 0.5, n=100)
     ret = opt._calc_price(1, type="euro", tree=False)
 
     print(ret)
