@@ -189,7 +189,6 @@ class BionomialSpreadOption(_Option):
                                 self._payoff(self._option, z, node_value_S1, node_value_S2, self._Q1, self._Q2, self._K, self._K2)
                         )
 
-        print(OptionValue.shape)
         return OptionValue[0,0]
     
     def _payoff(self, option, z, S1, S2, Q1, Q2, K, K2):
