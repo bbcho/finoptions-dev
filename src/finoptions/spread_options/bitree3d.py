@@ -2,7 +2,6 @@ import numpy as _np
 from ..base import GreeksFDM, Option as _Option
 from ..utils import docstring_from
 
-
 class BionomialSpreadAllTypes(_Option):
     """
     Rubinstein (1994) published a method to construct a 3-dimensional binomial 
@@ -190,7 +189,13 @@ class BionomialSpreadAllTypes(_Option):
                                 self._payoff(self._option, z, node_value_S1, node_value_S2, self._Q1, self._Q2, self._K, self._K2)
                         )
 
-        return OptionValue[0,0]
+
+        if tree == True:
+            out = OptionValue
+        else:
+            out = OptionValue[0,0]
+
+        return out
     
     def _payoff(self, option, z, S1, S2, Q1, Q2, K, K2):
         
@@ -670,6 +675,7 @@ class BionomialMinOption(BionomialSpreadAllTypes):
             "otype": self._otype,
             "n": self._n,
         }
+
 
 class BionomialSpreadOption(BionomialSpreadAllTypes):
     """
