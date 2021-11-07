@@ -391,29 +391,29 @@ class Option(Derivative):
 
         self.__init__(**tmp)
 
-    @abstractmethod
-    def delta(self):
-        pass
+    # @abstractmethod
+    # def delta(self):
+    #     pass
 
-    @abstractmethod
-    def theta(self):
-        pass
+    # @abstractmethod
+    # def theta(self):
+    #     pass
 
-    @abstractmethod
-    def vega(self):
-        pass
+    # @abstractmethod
+    # def vega(self):
+    #     pass
 
-    @abstractmethod
-    def lamb(self):
-        pass
+    # @abstractmethod
+    # def lamb(self):
+    #     pass
 
-    @abstractmethod
-    def gamma(self):
-        pass
+    # @abstractmethod
+    # def gamma(self):
+    #     pass
 
-    @abstractmethod
-    def greeks(self):
-        pass
+    # @abstractmethod
+    # def greeks(self):
+    #     pass
 
     def summary(self, printer=True):
         """
