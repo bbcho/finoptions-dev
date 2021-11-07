@@ -1,4 +1,6 @@
 import numpy as _np
+
+from finoptions.spread_options.bitree3d import BionomialSpreadAllTypes
 from ..base import GreeksFDM, Option as _Option
 from ..utils import docstring_from
 
@@ -169,3 +171,96 @@ class SpreadApproxOption(_Option):
                     * (-self._S*self._CND(-self._d1) + self._CND(-self._d2))
 
         return result
+
+    @docstring_from(GreeksFDM.delta)
+    def delta(self, call: bool = True):
+        
+        fd1 = self._greeks._make_partial_der("S1", call, self, n=1)
+        fd2 = self._greeks._make_partial_der("S2", call, self, n=1)
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        out = dict(
+            S1 = fd1(self._S1) * 1,
+            S2 = fd2(self._S2) * 1,
+        )
+
+        return out
+
+    @docstring_from(GreeksFDM.theta)
+    def theta(self, call: bool = True):
+        return self._greeks.theta(call=call)
+
+    @docstring_from(GreeksFDM.vega)
+    def vega(self):
+        # same for both call and put options
+        fd1 = self._greeks._make_partial_der("sigma1", True, self, n=1)
+        fd2 = self._greeks._make_partial_der("sigma2", True, self, n=1)
+
+        out = dict(
+            sigma1 = fd1(self._sigma1) * 1,
+            sigma2 = fd2(self._sigma2) * 1
+        )
+
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return out
+
+    @docstring_from(GreeksFDM.rho)
+    def rho(self, call: bool = True):
+        return self._greeks.rho(call=call)
+
+    @docstring_from(GreeksFDM.lamb)
+    def lamb(self, call: bool = True):
+        if call == True:
+            price = self.call()
+        else:
+            price = self.put()
+
+        out = dict(
+            S1 = self.delta(call=call)['S1'] * self._S1 / price,
+            S2 = self.delta(call=call)['S2'] * self._S2 / price
+        )
+        return out
+
+    @docstring_from(GreeksFDM.gamma)
+    def gamma(self):
+        # same for both call and put options
+        fd1 = self._greeks._make_partial_der("S1", True, self, n=2)
+        fd2 = self._greeks._make_partial_der("S2", True, self, n=2)
+        
+        out = dict(
+            S1 = fd1(self._S1) * 1,
+            S2 = fd2(self._S2) * 1
+        )
+        # multiple by 1 to return float vs array for single element arrays. Multi-element arrays returned as normal
+        return out
+
+    @docstring_from(GreeksFDM.greeks)
+    def greeks(self, call: bool = True):
+        gk = {
+            "delta": self.delta(call),
+            "theta": self.theta(call),
+            "vega": self.vega(),
+            "rho": self.rho(call),
+            "lambda": self.lamb(call),
+            "gamma": self.gamma(),
+        }
+
+        return gk
+
+    def get_params(self):
+        return {
+            "S1": self._S1,
+            "S2": self._S2,
+            "K": self._K,
+            "t": self._t,
+            "r": self._r,
+            "b1": self._b1,
+            "b2": self._b2,
+            "sigma1": self._sigma1,
+            "sigma2": self._sigma2,
+            "rho": self._rho,
+            "Q1": self._Q1,
+            "Q2": self._Q2,
+        }
+
+        

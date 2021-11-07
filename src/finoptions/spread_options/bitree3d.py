@@ -2,6 +2,7 @@ import numpy as _np
 from ..base import GreeksFDM, Option as _Option
 from ..utils import docstring_from
 
+
 class BionomialSpreadAllTypes(_Option):
     """
     Rubinstein (1994) published a method to construct a 3-dimensional binomial 
