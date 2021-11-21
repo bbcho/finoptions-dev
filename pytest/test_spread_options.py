@@ -145,12 +145,16 @@ def test_binomial_spread():
             round(testval, 4), test["vals"]["call"]
         ), f"Bionomial Spread Option call test {str(i)} failed. Params = {test['params']}. Test = {test['vals']['call']}. Return {testval}"
 
-        # fmt: off
-        val = opt.call() - (opt._S1*np.exp(opt._b1-opt._r*opt._t) - opt._S2*np.exp(opt._b2-opt._r*opt._t)) + opt._K*np.exp(-opt._r*opt._t)
-        assert np.allclose(
-            round(testval, 4), val
-        ), f"Bionomial Spread Option put test {str(i)} failed. Params = {test['params']}. Test = {test['vals']['call']}. Return {testval}"
-        # fmt: on
+        if test["params"]["otype"] == "european":
+            # uses put-call parity relationship for euro options to test puts. Does not apply to american options
+            # fmt: off
+            val = opt.call() - (opt._S1*np.exp((opt._b1-opt._r)*opt._t) - opt._S2*np.exp((opt._b2-opt._r)*opt._t)) + opt._K*np.exp(-opt._r*opt._t)
+            testval = opt.put()
+            call = test["vals"]["call"]
+            assert np.allclose(
+                round(testval, 3), round(val, 3)
+            ), f"Bionomial Spread Option put test {str(i)}, {call} failed. Params = {test['params']}. Test = {val}. Return {testval}"
+            # fmt: on
 
 
 testsApprox = [
