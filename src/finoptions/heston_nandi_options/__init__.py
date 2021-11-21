@@ -4,6 +4,7 @@ import numpy as _np
 from scipy.optimize import minimize as _minimize
 from scipy.stats import norm as _norm
 from dataclasses import dataclass
+from scipy.integrate import quad as _quad
 # from .hnGARCH import *
 
 # def _HNGCharacteristics(lamb, omega, alpha, beta, gamma, S, K, t_in_days, r_daily, call=True):

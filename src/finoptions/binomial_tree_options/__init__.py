@@ -121,6 +121,10 @@ class CRRBinomialTreeOption(_Option):
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
+    type : str
+        "european" to price European options, "american" to price American options. By default "european"
+    n : int
+        Number of time steps to use. By default 5.
 
     Returns
     -------
@@ -132,7 +136,6 @@ class CRRBinomialTreeOption(_Option):
     >>> opt = fo.binomial_tree_options.CRRBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
     >>> opt.call()
     >>> opt.put()
-    >>> opt.call(type='american')
     >>> opt.greeks(call=True)
 
     References
@@ -305,7 +308,7 @@ class CRRBinomialTreeOption(_Option):
         Df = _np.exp(-self._r * dt)
 
         OptionValue = z * (self._S * u ** _np.arange(0, n + 1) * d ** _np.arange(n, -1, -1) - self._K)
-        OptionValue = (_np.abs(OptionValue) + OptionValue) / 2
+        OptionValue = (_np.abs(OptionValue) + OptionValue) / 2 # takes the max vs zero
 
         if type == "european":
             out = self._euro(OptionValue, n, Df, p, tree)
@@ -411,6 +414,8 @@ class JRBinomialTreeOption(CRRBinomialTreeOption):
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
+    n : int
+        Number of time steps to use. By default 5.
 
     Returns
     -------
@@ -477,6 +482,10 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
     sigma : float
         Annualized volatility of the underlying asset. Optional if calculating implied volatility.
         Required otherwise. By default None.
+    type : str
+        "european" to price European options, "american" to price American options. By default "european"
+    n : int
+        Number of time steps to use. By default 5.
 
     Returns
     -------
@@ -488,7 +497,6 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
     >>> opt = fo.binomial_tree_options.TIANBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
     >>> opt.call()
     >>> opt.put()
-    >>> opt.call(type='american')
     >>> opt.greeks(call=True)
 
     References
@@ -523,29 +531,44 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
 
 class TrinomialTreeOption(CRRBinomialTreeOption):
     """
-    Description:
-          Calculates option prices from the Trinomial tree model.
+    Calculates option prices from the Trinomial tree model. Trinomial trees in
+    option pricing are similar to binomial trees. Trinomial trees can be used to
+    price both European and American options on a single underlying asset.
+    Because the asset price can move in three directions from a given node,
+    compared with only two in a binomial tree, the number of time steps can
+    be reduced to attain the same accuracy as in the binomial tree.
 
-        Arguments:
-          AmeEurFlag - a character value, either "a" or "e" for
-              a European or American style option
-          CallPutFlag - a character value, either "c" or "p" for
-              a call or put option
-          S, X, Time, r, b, sigma - the usual option parameters
-          n - an integer value, the depth of the tree
+    Parameters
+    ----------
+    S : float
+        Level or index price.
+    K : float
+        Strike price.
+    t : float
+        Time-to-maturity in fractional years. i.e. 1/12 for 1 month, 1/252 for 1 business day, 1.0 for 1 year.
+    r : float
+        Risk-free-rate in decimal format (i.e. 0.01 for 1%).
+    b : float
+        Annualized cost-of-carry rate, e.g. 0.1 means 10%
+    sigma : float
+        Annualized volatility of the underlying asset. Optional if calculating implied volatility.
+        Required otherwise. By default None.
+    type : str
+        "european" to price European options, "american" to price American options. By default "european"
+    n : int
+        Number of time steps to use. By default 5.
 
-        Value:
-          Returns the price of the options.
+    Returns
+    -------
+    JRBinomialTreeOption object.
 
-        Details:
-          Trinomial trees in option pricing are similar to
-          binomial trees. Trinomial trees can be used to
-          price both European and American options on a single
-          underlying asset.
-          Because the asset price can move in three directions
-          from a given node, compared with only two in a binomial
-          tree, the number of time steps can be reduced to attain
-          the same accuracy as in the binomial tree.
+    Example
+    -------
+    >>> import finoptions as fo
+    >>> opt = fo.binomial_tree_options.TIANBinomialTreeOption(S=50, K=50, t=5/12, r=0.1, b=0., sigma=0.4)
+    >>> opt.call()
+    >>> opt.put()
+    >>> opt.greeks(call=True)
 
         Reference:
           E.G Haug, The Complete Guide to Option Pricing Formulas
