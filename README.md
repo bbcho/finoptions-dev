@@ -85,6 +85,9 @@ opt.greeks() # to get the greeks for the option
 - Relative performance options
 - Product options
 
+### Monte Carlo Options
+- Monte Carlo simulation framework (see example)
+
 ## Notebooks
 To see example notebooks, please see github repo found here:
 
