@@ -9,3 +9,4 @@
 1. Make 3D bionomial spread options faster through vectorization
 1. make 3D tree option plotter
 1. add sub-classes for 3d bionomial spread options for different types
+1. find out why test 11 on puts for BionomialSpreadOption is only accurate to 3 decimals

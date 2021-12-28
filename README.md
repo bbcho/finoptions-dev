@@ -49,8 +49,43 @@ opt.put() # to get put price
 opt.summary() # for a printed summary of the option
 opt.greeks() # to get the greeks for the option
 ```
-# Notebooks
 
+## Implemented Methods
+
+### Vanilla Options
+- Black-Scholes-Merton Option
+- Black 1976 Option
+- Miltersen Schwartz Option
+
+### American Options
+- Roll-Geske-Whaley Calls on Dividend Paying Stocks
+- Barone-Adesi and Whaley Approximation
+- The Bjerksund and Stensland (1993) American Approximation Option
+
+### Garch Options
+- The Heston-Nandi Garch Option Model
+
+### Tree Options
+- Cox, Ross and Rubinstein (1979) Binomial Tree Model
+- Jarrow and Rudd (1983) Binomial Tree Model
+- Tian (1993) Binomial Tree Model
+- Trinomial Tree Model
+
+### Spread Options
+- Rubinstein Binomial Tree Generic Spread Option Model
+
+#### Bionomial Tree Spread Options
+- Maximum Spread Option Model
+- Minimum Spread Option Model
+- Spread Option Model
+- Dual-strike Option
+- Reverse dual-strike option
+- Portfolio options
+- Options to exchange one asset for another
+- Relative performance options
+- Product options
+
+## Notebooks
 To see example notebooks, please see github repo found here:
 
 https://github.com/bbcho/finoptions-dev/tree/main/notebooks

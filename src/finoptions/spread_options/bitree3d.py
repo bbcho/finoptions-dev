@@ -111,7 +111,7 @@ class BionomialSpreadAllTypes(_Option):
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
     """
     __name__ = "BionomialSpreadOption"
-    __title__ = "Binomial Tree Spread Option Model"
+    __title__ = "Rubinstein Binomial Tree Spread Option Model"
 
     def __init__(
         self,
@@ -551,7 +551,7 @@ class BionomialMinOption(BionomialSpreadAllTypes):
     assets - both American and European.
 
     This implementation is for am option on the minimum and is defined as
-    the maximum of S1 or S2 vs the strike price K.
+    the minimum of S1 or S2 vs the strike price K.
 
     C: max( 0, min(Q1*S1, Q2*S2) - K )
     P: max( 0, K - min(Q1*S1, Q2*S2) )
@@ -684,8 +684,7 @@ class BionomialSpreadOption(BionomialSpreadAllTypes):
     model that can be used to price most types of options that depend on two 
     assets - both American and European.
 
-    This implementation is for am option on the minimum and is defined as
-    the maximum of S1 or S2 vs the strike price K.
+    This implementation is for a standard spread option with the following payoffs
 
     C: max( 0, (Q1*S1 - Q2*S2) - K )
     P: max( 0, K - (Q1*S1 - Q2*S2) )
@@ -747,7 +746,7 @@ class BionomialSpreadOption(BionomialSpreadAllTypes):
     >>> opt.greeks(call=True)
     """
     __name__ = "BionomialMinOption"
-    __title__ = "Binomial Tree Minimum Spread Option Model"
+    __title__ = "Binomial Tree Spread Option Model"
 
     def __init__(
         self,
