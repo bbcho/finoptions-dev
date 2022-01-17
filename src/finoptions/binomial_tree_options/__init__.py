@@ -144,7 +144,7 @@ class CRRBinomialTreeOption(_Option):
     """
 
     __name__ = "CRRBinomialTreeOption"
-    __title__ = "CRR Binomial Tree Model"
+    __title__ = "Cox, Ross and Rubinstein (1979) Binomial Tree Model"
 
     def __init__(
         self,
@@ -436,7 +436,7 @@ class JRBinomialTreeOption(CRRBinomialTreeOption):
     """
 
     __name__ = "JRBinomialTreeOption"
-    __title__ = "JR Binomial Tree Model"
+    __title__ = "Jarrow and Rudd (1983) Binomial Tree Model"
 
     def _calc_price(self, z, n, type, tree=False):
         dt = self._t / n
@@ -503,6 +503,9 @@ class TIANBinomialTreeOption(CRRBinomialTreeOption):
     ----------
     [1] Haug E.G., The Complete Guide to Option Pricing Formulas
     """
+
+    __name__ = "TIANBinomialTreeOption"
+    __title__ = "Tian (1993) Binomial Tree Model"
 
     def _calc_price(self, z, n, type, tree=False):
         dt = self._t / n

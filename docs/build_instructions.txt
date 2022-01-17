@@ -1,0 +1,2 @@
+sphinx-apidoc -f -o source ../src/finoptions
+make html
