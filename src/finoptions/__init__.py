@@ -6,6 +6,7 @@ from . import binomial_tree_options
 from . import heston_nandi_options
 from . import monte_carlo_options
 from . import spread_options
+from . import exotic_options
 
 
 def docstring_from(source):

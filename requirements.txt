@@ -1,0 +1,4 @@
+scipy>=1.7
+numpy
+numdifftools
+matplotlib
