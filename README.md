@@ -2,9 +2,6 @@
 
 Python implementation of the R package fOptions for use in energy trading. Changes include coverting the package to OOP as well as Finite Difference Methods for Option greeks for all Options.
 
-## Supported by Rpanda Training Solutions
-<br>
-
 To install package run:
 
 ```
